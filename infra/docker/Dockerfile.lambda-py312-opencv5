@@ -1,0 +1,42 @@
+# Custom Lambda execution image for LocalStack: python 3.12 on Ubuntu 24.04
+# plus the project's SOURCE-BUILT OpenCV 5, so the motion-gate Lambda can
+# `import cv2` and run MOG2 on the exact libraries the local pipeline uses.
+#
+# Why a custom base at all: the official lambda:python3.12 image runs Amazon
+# Linux 2023 (glibc 2.34), and the source-built libopencv_*.so.5.0.0 require
+# glibc >= 2.38 (Ubuntu 24.04 ships 2.39). Everything else mirrors the
+# official image layout so LocalStack's /var/rapid/init finds its bootstrap:
+#
+#   /var/lang/bin/python3.12   interpreter + site-packages (venv)
+#   /var/runtime/bootstrap     exec'd by /var/rapid/init
+#   /opt/python/cv2            OpenCV 5 python bindings (layer path)
+#   /opt/opencv-5.0.0/lib      libopencv_*.so.5.0.0 (LD_LIBRARY_PATH below)
+#
+# The build context is prepared by scripts/build-lambda-image.sh, which
+# harvests cv2 + the shared libs from the sprints-1-2 pipeline venv and
+# rewrites the cmake-generated absolute paths in cv2/config*.py.
+FROM ubuntu:24.04
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3.12 python3.12-venv ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# Pinned to the versions the pipeline venvs use (awslambdaric = the Lambda
+# Runtime Interface Client; boto3 for handler AWS SDK calls; numpy is the
+# ABI the cv2 wrapper was compiled against).
+RUN /usr/bin/python3.12 -m venv /var/lang \
+ && /var/lang/bin/pip install --no-cache-dir \
+      awslambdaric==4.0.4 \
+      boto3==1.43.95 \
+      numpy==2.5.3
+
+COPY runtime/bootstrap runtime/bootstrap.py runtime/runtime-release /var/runtime/
+RUN chmod 755 /var/runtime/bootstrap /var/runtime/bootstrap.py
+
+COPY opencv/cv2/ /opt/python/cv2/
+COPY opencv/lib/ /opt/opencv-5.0.0/lib/
+
+# Same shape as the official image's LD_LIBRARY_PATH, with the vendored
+# OpenCV libs first: DT_RUNPATH inside libopencv_*.so points at the build
+# venv (dead here), and LD_LIBRARY_PATH is searched before RUNPATH.
+ENV LD_LIBRARY_PATH=/opt/opencv-5.0.0/lib:/var/lang/lib:/lib64:/usr/lib64:/var/runtime:/var/runtime/lib:/var/task:/var/task/lib:/opt/lib

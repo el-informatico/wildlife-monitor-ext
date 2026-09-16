@@ -22,6 +22,11 @@ services:
       # Ephemeral by default: state lives in the container, so
       # `docker compose down` gives a truly clean slate for the smoke test.
       - PERSISTENCE=${PERSISTENCE:-0}
+      # Route python3.12 functions onto the custom execution image built by
+      # scripts/build-lambda-image.sh (Ubuntu 24.04 + the source-built
+      # OpenCV 5, required for the MOG2 motion gate inside the Lambda).
+      # Empty/unset keeps LocalStack's stock images — see .env.example.
+      - LAMBDA_RUNTIME_IMAGE_MAPPING=${LAMBDA_RUNTIME_IMAGE_MAPPING:-}
     volumes:
       # Lambda execution: LocalStack spawns function containers through the
       # host's Docker daemon.
@@ -34,6 +39,9 @@ services:
       # LocalStack logs as an empty ContainerException). The hook re-owns
       # them to root (always mappable) once the container is ready.
       - ./scripts/localstack-init/01-fix-lambda-runtime-ownership.sh:/etc/localstack/init/ready.d/01-fix-lambda-runtime-ownership.sh:ro
+      # Lets LAMBDA_RUNTIME_IMAGE_MAPPING reference images that exist only in
+      # the local daemon (the custom OpenCV 5 image) — see the hook header.
+      - ./scripts/localstack-init/02-allow-local-lambda-runtime-images.sh:/etc/localstack/init/ready.d/02-allow-local-lambda-runtime-images.sh:ro
     # The host daemon runs userns-remap (root:docker socket is unreachable
     # from remapped containers); host userns lets LocalStack actually use it.
     userns_mode: host

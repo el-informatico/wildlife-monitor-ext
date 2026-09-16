@@ -1,0 +1,2 @@
+NAME=Python
+VERSION=3.12 (custom Ubuntu 24.04 image with source-built OpenCV 5)

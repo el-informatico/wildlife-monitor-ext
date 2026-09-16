@@ -1,0 +1,25 @@
+#!/bin/bash
+# Lambda runtime bootstrap for the custom python3.12 execution image
+# (docker/Dockerfile.lambda-py312-opencv5). Mirrors the official AWS base
+# image's /var/runtime/bootstrap: /var/rapid/init (copied into every
+# execution container by LocalStack) execs this file, which hands over to
+# the Runtime Interface Client under /var/lang.
+#
+# Adapted from the AWS Lambda python base image (Apache-2.0).
+
+export AWS_EXECUTION_ENV=AWS_Lambda_python3.12
+
+if [ -z "$AWS_LAMBDA_EXEC_WRAPPER" ]; then
+  exec /var/lang/bin/python3.12 /var/runtime/bootstrap.py
+else
+  wrapper="$AWS_LAMBDA_EXEC_WRAPPER"
+  if [ ! -f "$wrapper" ]; then
+    echo "$wrapper: does not exist"
+    exit 127
+  fi
+  if [ ! -x "$wrapper" ]; then
+    echo "$wrapper: is not an executable"
+    exit 126
+  fi
+    exec -- "$wrapper" /var/lang/bin/python3.12 /var/runtime/bootstrap.py
+fi
