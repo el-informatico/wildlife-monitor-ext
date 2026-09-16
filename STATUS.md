@@ -4,8 +4,9 @@ This repo holds the extension work around the sprints-1-2 pipeline that
 lives in the sibling `wildlife-monitor` repo (its STATUS.md tracks S1/S2
 and classifier v0): untracked datasets/models/artifacts, the sprint-3
 `infra/` ingest slice, the `pipeline/` E2E union stage, the `eval/` G3
-perception evaluation, and — as of 2026-09-16 — the `agent/` S4 triage
-agent, all documented below.
+perception evaluation and S5 final evaluation, the `agent/` S4 triage
+agent, and the `dashboard/` S5 read-only ops endpoint, all documented
+below.
 
 ## infra — S3 → Lambda → DynamoDB ingest slice (2026-09-16)
 
@@ -307,8 +308,90 @@ Bedrock spend this sprint: $0 (§7 note in the report).
   `image_id` → manifest `location_id` (verified consistent per camera
   across all 26,177 rows).
 
+## S5 dashboard + final eval — Gate G5, met (2026-09-16)
+
+Sprint 5: the read-only ops endpoint, the final evaluation tables, and
+the latency/cost comparison. Full report with every table and the gate
+checklist: `eval/S5-REPORT.md`; dashboard docs: `dashboard/README.md`.
+
+### What ran
+
+    ../wildlife-monitor/.venv/bin/python -m eval.run_final
+    ../wildlife-monitor/.venv/bin/python -m eval.run_latency
+    ../wildlife-monitor/.venv/bin/python -m dashboard            # 127.0.0.1:8787 (--host ::1 on WSL2 mirrored)
+    ../wildlife-monitor/.venv/bin/python -m pytest pipeline/tests eval/tests agent/tests dashboard/tests -q
+
+### Dashboard
+
+Stdlib-only `ThreadingHTTPServer` (no web dependency) over the local
+artifacts: one page + five JSON routes + **one** image route. 48
+cameras (schematic two-cluster map — no GPS exists in any metadata;
+stated in the payload), deployed species counts (elephant 162 · zebra
+85 · rhino 62 · buffalo 30), the 7 S4 approval-queue person events with
+the committed G4 baseline cross-reference, and the 7 G3 failure cases
+with images. Face blur is enforced on the single image-serving path:
+stored person boxes ∪ a live MDv6 person pass at floor 0.10 at serve
+time → destructive head-band blur (top 28% + 6%/side — no offline face
+model exists; the cv2 wheel ships no Haar data); no-person images are
+served byte-identical; the `X-Face-Blur` header always states the
+outcome. Verified live (`applied=6;live` on a queue event, byte
+identity + `none;live` on a no-person image, five 404 guards) and
+locked by tests.
+
+### Final eval
+
+FP/camera/day over the S2 800-image sample (deploy 0.25, parity
+protocol; TP/FP/FN cross-checked vs committed G3: exact match — 812/
+676/210): 347 active camera×day cells, 99 at zero FP; FP per active
+cell mean 1.95 / p95 6 / max 18. missouri 3.0989 vs african_wildlife
+1.5391 FP/camera/day (day partition rides the synthetic ETL clock —
+counts measured, partition simulated). **Wellington person P/R:
+NOT_COMPUTABLE** — the dataset is absent and no local GT vocabulary
+carries a `person` class (probe evidence in the report); substitute on
+the available held-out: 48 person detections over 29 images / 18
+cameras (load, not errors), all 7 corpus person events queued by the
+agent.
+
+### Latency/cost
+
+Same-protocol three-lane table (800 images, warmup 3 excluded, CPU):
+new engine (cv2.dnn new) e2e p50 **148.47 ms** → **$3.67/1M** on
+c7i.large; legacy (PyTorch + Pytorch-Wildlife) 168.41 ms → $4.16/1M —
+**+13%** legacy overhead; cv2 classic ablation in between. Fresh n=100
+re-run confirms the new engine's lead (classic/PyTorch can swap at
+n=100 — the 800-image table is the number of record). Prices are stated
+assumptions (us-east-1
+list, retrieved 2026-09-16), model = ms/3.6 sequential.
+**Graviton: NOT MEASURED** (no AWS access; optional per the brief) —
+at-parity arithmetic $2.99/1M + the documented on-box bench procedure
+instead of a fabricated number.
+
+### Verification
+
+- Offline tests: **189 passed** (23 pipeline + 49 eval + 79 agent +
+  **38 dashboard** — blur geometry/destructiveness, Store aggregation,
+  image-resolution guards, live-HTTP endpoint tests on an ephemeral
+  port incl. blur enforcement and 404s).
+- Parity cross-check and the fresh-vs-stored latency deltas live inside
+  the generated reports (`processed/s5_final_report.json`,
+  `processed/s5_latency_report.json`).
+
+### Gate G5: met
+
+Endpoint deployed (local, read-only, blur always) + latency table (new
+vs legacy, CPU; Graviton honest NOT MEASURED with procedure) + cost per
+1M with assumptions + Wellington P/R reported as an honest
+NOT_COMPUTABLE with the person-load substitute. Item-by-item checklist:
+`eval/S5-REPORT.md` §6.
+
 ## Next
 
+- Graviton latency for real: run the documented `--fresh` bench on a
+  c7g.large (arm64 wheels, same first-100 images, warmup 3 excluded)
+  once AWS access resumes — replaces the at-parity arithmetic in
+  `processed/s5_latency.md`.
+- Ingest a person-labelled held-out (Wellington or equivalent) to make
+  person P/R computable — today's person numbers are load, not errors.
 - Agent: exercise the Bedrock adapter lane once AWS credentials resume
   (offline stub documented in `agent/adapters.py`) — it must beat
   `rules-v1` on the committed corpus comparison before its cost is

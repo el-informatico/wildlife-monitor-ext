@@ -22,6 +22,13 @@ License: Apache-2.0 (see `LICENSE`).
   perception output with traced conditional actions, a rules-only
   kill-switch baseline, and a live second-pass night re-analysis demo.
   See `agent/README.md` and `agent/G4-REPORT.md`.
+- `dashboard/` — S5 read-only ops endpoint (Gate G5): camera map,
+  species counts, approval queue, failure gallery, and face blur always
+  enforced on the single image-serving path. Plus the S5 final eval
+  (FP/camera/day, Wellington person P/R honestly NOT_COMPUTABLE) and
+  the latency/cost table (new cv2.dnn engine vs legacy PyTorch, $/1M
+  with stated assumptions). See `dashboard/README.md` and
+  `eval/S5-REPORT.md`.
 - `src/opencv/` — OpenCV 5 source tree used for the local build (untracked;
   fetch upstream).
 - `data/`, `downloads/`, `models/`, `processed/`, `manifests/`, `build/`,
