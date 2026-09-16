@@ -12,6 +12,9 @@ License: Apache-2.0 (see `LICENSE`).
 - `infra/` — sprint-3 infrastructure foundation: S3 → Lambda → DynamoDB
   ingestion path as Terraform, LocalStack docker-compose, unit tests and a
   LocalStack smoke test. See `infra/README.md`.
+- `pipeline/` — E2E union stage: MDv6 detections → training-recipe crops →
+  classifier v0 species → contract-valid records over the ETL sample, with
+  measured sanity metrics. See `pipeline/README.md` and `STATUS.md`.
 - `src/opencv/` — OpenCV 5 source tree used for the local build (untracked;
   fetch upstream).
 - `data/`, `downloads/`, `models/`, `processed/`, `manifests/`, `build/`,
