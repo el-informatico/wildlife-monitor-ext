@@ -1,0 +1,19 @@
+[project]
+name = "wfm-dashboard"
+version = "0.1.0"
+description = "G5 read-only dashboard: camera map, species counts, approval queue, failure gallery — face blur on every served image"
+requires-python = ">=3.12"
+# No pinned dependencies: the server core (store/server) is stdlib-only.
+# Face blur additionally uses the sprints-1-2 pipeline venv (OpenCV 5 +
+# the MDv6 ONNX for the live person re-check) — see dashboard/README.md.
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+]
+
+[tool.pytest.ini_options]
+# Same layout as pipeline/, eval/ and agent/: repo root on sys.path for
+# `dashboard.*` imports regardless of invocation cwd.
+pythonpath = ["..", "."]
+testpaths = ["tests"]
