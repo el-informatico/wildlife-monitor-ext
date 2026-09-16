@@ -47,9 +47,12 @@ NIGHT_REANALYSIS_MAX_CONF = 0.45
 REANALYSIS_CONF_FLOOR = 0.10
 
 #: Night preprocessing applied before the re-analysis forward pass — the
-#: same CLAHE recipe the motion gate uses on content-IR frames since S1
-#: (clip 3.0, tile (8,8); infra/handler/motion_app.py pins the parity).
-REANALYSIS_PREPROCESS = "clahe(clip=3.0, tile=(8,8))"
+#: same CLAHE recipe the motion gate uses on content-IR frames since S1:
+#: applied to the GRAYSCALE plane (clip 3.0, tile (8,8)) and replicated
+#: back to 3 channels for the detector. infra/handler/motion_app.py pins
+#: the parity; the string names the plane so traces cannot be read as
+#: per-channel CLAHE on BGR.
+REANALYSIS_PREPROCESS = "clahe-gray(clip=3.0, tile=(8,8))"
 
 #: The re-analysis action exists to close a marginal question once: it
 #: fires only on pass-1 events. A pass-2 event never re-triggers it

@@ -1,0 +1,353 @@
+{
+  "action_counts": {
+    "agent": {
+      "approval_queue:normal": 7,
+      "archive": 184,
+      "night_reanalysis": 9
+    },
+    "baseline": {
+      "approval_queue:normal": 2,
+      "archive": 184,
+      "escalate:high": 5,
+      "night_reanalysis": 9
+    }
+  },
+  "agent_backend": "rules-v1",
+  "agreement": {
+    "divergent_actions": 5,
+    "same_action": 195,
+    "same_action_but_priority_differs": 0
+  },
+  "baseline": "rules-only-v1",
+  "divergent_events": [
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "escalate",
+        "priority": "high"
+      },
+      "camera_id": "african_wildlife-L23",
+      "curfew_active": null,
+      "dataset": "african_wildlife",
+      "diverges": true,
+      "event_id": "aw-00095",
+      "hour": 15,
+      "max_conf_by_label": {
+        "animal": 0.8097,
+        "person": 0.9038
+      },
+      "night_content_ir": false,
+      "same_action": false,
+      "zone_restricted": false
+    },
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "escalate",
+        "priority": "high"
+      },
+      "camera_id": "african_wildlife-L16",
+      "curfew_active": null,
+      "dataset": "african_wildlife",
+      "diverges": true,
+      "event_id": "aw-00494",
+      "hour": 13,
+      "max_conf_by_label": {
+        "animal": 0.6879,
+        "person": 0.7985
+      },
+      "night_content_ir": false,
+      "same_action": false,
+      "zone_restricted": false
+    },
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "escalate",
+        "priority": "high"
+      },
+      "camera_id": "african_wildlife-L03",
+      "curfew_active": null,
+      "dataset": "african_wildlife",
+      "diverges": true,
+      "event_id": "aw-00551",
+      "hour": 3,
+      "max_conf_by_label": {
+        "animal": 0.4012,
+        "person": 0.7691
+      },
+      "night_content_ir": false,
+      "same_action": false,
+      "zone_restricted": false
+    },
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "escalate",
+        "priority": "high"
+      },
+      "camera_id": "missouri-L17",
+      "curfew_active": null,
+      "dataset": "missouri",
+      "diverges": true,
+      "event_id": "mo-06604",
+      "hour": 11,
+      "max_conf_by_label": {
+        "person": 0.5164
+      },
+      "night_content_ir": false,
+      "same_action": false,
+      "zone_restricted": false
+    },
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "escalate",
+        "priority": "high"
+      },
+      "camera_id": "missouri-L05",
+      "curfew_active": null,
+      "dataset": "missouri",
+      "diverges": true,
+      "event_id": "mo-10782",
+      "hour": 11,
+      "max_conf_by_label": {
+        "animal": 0.2642,
+        "person": 0.6448
+      },
+      "night_content_ir": true,
+      "same_action": false,
+      "zone_restricted": false
+    }
+  ],
+  "escalation_load": {
+    "agent_escalates": 0,
+    "agent_person_events_queued": 7,
+    "baseline_escalates": 5,
+    "baseline_person_events_escalated": 5,
+    "note": "events that page a human immediately (escalate) vs queue for scheduled review — the operational cost the kill-switch question is about"
+  },
+  "inputs": {
+    "batches": "processed/e2e_union_v0_batches.jsonl",
+    "cameras": 48,
+    "clock_source": "manifest-synthetic",
+    "events": 200,
+    "history": "the corpus itself is the event history (72h lookback, same camera)",
+    "ir_flags": "processed/g3_ir_flags.json",
+    "manifest": "processed/manifest.parquet"
+  },
+  "night_reanalysis": {
+    "event_ids": [
+      "mo-00454",
+      "mo-03506",
+      "mo-03517",
+      "mo-03756",
+      "mo-03763",
+      "mo-04612",
+      "mo-04956",
+      "mo-16230",
+      "mo-16412"
+    ],
+    "events": 9,
+    "note": "both lanes fire this identically — the perception rule is shared, so these are agreement by construction"
+  },
+  "person_events": [
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "escalate",
+        "priority": "high"
+      },
+      "camera_id": "african_wildlife-L23",
+      "curfew_active": null,
+      "dataset": "african_wildlife",
+      "diverges": true,
+      "event_id": "aw-00095",
+      "hour": 15,
+      "max_conf_by_label": {
+        "animal": 0.8097,
+        "person": 0.9038
+      },
+      "night_content_ir": false,
+      "same_action": false,
+      "zone_restricted": false
+    },
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "escalate",
+        "priority": "high"
+      },
+      "camera_id": "african_wildlife-L16",
+      "curfew_active": null,
+      "dataset": "african_wildlife",
+      "diverges": true,
+      "event_id": "aw-00494",
+      "hour": 13,
+      "max_conf_by_label": {
+        "animal": 0.6879,
+        "person": 0.7985
+      },
+      "night_content_ir": false,
+      "same_action": false,
+      "zone_restricted": false
+    },
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "escalate",
+        "priority": "high"
+      },
+      "camera_id": "african_wildlife-L03",
+      "curfew_active": null,
+      "dataset": "african_wildlife",
+      "diverges": true,
+      "event_id": "aw-00551",
+      "hour": 3,
+      "max_conf_by_label": {
+        "animal": 0.4012,
+        "person": 0.7691
+      },
+      "night_content_ir": false,
+      "same_action": false,
+      "zone_restricted": false
+    },
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "camera_id": "african_wildlife-L21",
+      "curfew_active": null,
+      "dataset": "african_wildlife",
+      "diverges": false,
+      "event_id": "aw-00922",
+      "hour": 0,
+      "max_conf_by_label": {
+        "animal": 0.3009,
+        "person": 0.2605
+      },
+      "night_content_ir": false,
+      "same_action": true,
+      "zone_restricted": false
+    },
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "escalate",
+        "priority": "high"
+      },
+      "camera_id": "missouri-L17",
+      "curfew_active": null,
+      "dataset": "missouri",
+      "diverges": true,
+      "event_id": "mo-06604",
+      "hour": 11,
+      "max_conf_by_label": {
+        "person": 0.5164
+      },
+      "night_content_ir": false,
+      "same_action": false,
+      "zone_restricted": false
+    },
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "escalate",
+        "priority": "high"
+      },
+      "camera_id": "missouri-L05",
+      "curfew_active": null,
+      "dataset": "missouri",
+      "diverges": true,
+      "event_id": "mo-10782",
+      "hour": 11,
+      "max_conf_by_label": {
+        "animal": 0.2642,
+        "person": 0.6448
+      },
+      "night_content_ir": true,
+      "same_action": false,
+      "zone_restricted": false
+    },
+    {
+      "agent": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "baseline": {
+        "action": "approval_queue",
+        "priority": "normal"
+      },
+      "camera_id": "missouri-L05",
+      "curfew_active": null,
+      "dataset": "missouri",
+      "diverges": false,
+      "event_id": "mo-10786",
+      "hour": 11,
+      "max_conf_by_label": {
+        "person": 0.4102
+      },
+      "night_content_ir": true,
+      "same_action": true,
+      "zone_restricted": false
+    }
+  ],
+  "schema": "wfm-s4-corpus-comparison/v1",
+  "vehicle_events": [
+    {
+      "agent": {
+        "action": "archive"
+      },
+      "baseline": {
+        "action": "archive"
+      },
+      "camera_id": "african_wildlife-L22",
+      "curfew_active": null,
+      "dataset": "african_wildlife",
+      "diverges": false,
+      "event_id": "aw-00587",
+      "hour": 8,
+      "max_conf_by_label": {
+        "vehicle": 0.476
+      },
+      "night_content_ir": false,
+      "same_action": true,
+      "zone_restricted": false
+    }
+  ]
+}

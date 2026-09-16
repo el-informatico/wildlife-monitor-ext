@@ -144,8 +144,10 @@ def synthetic_event(**overrides) -> dict[str, Any]:
 
 
 def synthetic_zones(*camera_ids: str) -> dict[str, dict[str, Any]]:
-    """Zone policy for synthetic cameras — mirrors real corpus facts:
-    missouri-L00 is restricted, every other id is open."""
+    """Zone policy for synthetic cameras: missouri-L00 (restricted in the
+    real corpus) is the canonical restricted fixture; every other id is
+    open BY CONSTRUCTION here, whatever the corpus says about it — tests
+    that need a real camera's actual flag use zones_from_manifest_rows."""
     rows = [{"camera_id": c, "zone_restricted": c == "missouri-L00"}
             for c in camera_ids]
     return zones_from_manifest_rows(rows)
