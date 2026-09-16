@@ -3,8 +3,8 @@
 This repo holds the extension work around the sprints-1-2 pipeline that
 lives in the sibling `wildlife-monitor` repo (its STATUS.md tracks S1/S2
 and classifier v0): untracked datasets/models/artifacts, the sprint-3
-`infra/` ingest slice, and — as of 2026-09-16 — the `pipeline/` E2E
-union stage documented below.
+`infra/` ingest slice, the `pipeline/` E2E union stage, and — as of
+2026-09-16 — the `eval/` G3 perception evaluation documented below.
 
 ## infra — S3 → Lambda → DynamoDB ingest slice (2026-09-16)
 
@@ -116,8 +116,123 @@ wall time **35.5 s** for 200 images (~0.18 s/image, CPU).
 - Recall is measured on the 200-image deterministic subsample, not the
   full S2 sample.
 
+## G3 perception evaluation — metrics, day/night split, sequence logic, failure catalog (2026-09-16)
+
+Sprint 3 / Gate G3: a reproducible evaluation harness over the S1/S2
+datasets and artifacts, with held-out integrity enforced before any
+number is produced. Full report with every table, split definition, and
+caveat: `eval/G3-REPORT.md`; annotated failure cases:
+`eval/failures/CATALOG.md` (7 cases with images). Day/night throughout
+is the content-based IR flag (mean HSV saturation < 25); the manifest's
+`is_night` is synthetic-random (agreement with content ≈ chance:
+0.449 missouri / 0.516 african_wildlife) and is never used to split a
+number.
+
+### What ran
+
+    ../wildlife-monitor/.venv/bin/python -m eval.run_eval
+    ../wildlife-monitor/.venv/bin/python -m eval.run_failures
+    ../wildlife-monitor/.venv/bin/python -m pytest eval/tests pipeline/tests -q
+
+`run_eval` = 4 stages (motion gate, classifier, detection, sequence),
+split-integrity gate first, deterministic (seeded, second full run
+reproduced every number). Expensive passes cache under `processed/`
+(`g3_motion.parquet`, `g3_seq_dets_*.json`); `--refresh` recomputes.
+CPU-only (`nvidia-smi` absent — no VRAM to check, no batching to
+degrade; documented in the report).
+
+### Sample and outputs
+
+- classifier v0: the trainer's own 375-crop AW **test** cache (227
+  source images); 6-check integrity gate all-pass, crop windows
+  recomputed from YOLO labels 375/375 integer-exact.
+- detection: the S2 800-image sample (400 AW-with-GT / 300 MO-with-GT /
+  100 MO-empty), MDv6, parity protocol IoU ≥ 0.5.
+- sequence: 100 Missouri GT sequences (1,276 frames) + 115 AW test
+  bursts (227 images; all pure-test).
+- motion: full manifest 26,177 frames / 48 cameras, 0 decode failures.
+- Outputs in `processed/` (prefix `g3_`): `report.json`, `metrics.csv`
+  (tidy long), `metrics.md` (tables), `motion.parquet`, two seq-dets
+  caches. Failure images are committed under `eval/failures/images/`.
+
+### Sanity metrics
+
+Classifier (AW test, n=375): top-1 **0.9867** micro / 0.9852 macro —
+matches the trainer's torch reference exactly (375/375 top-1 agreement,
+max |Δprob| 0.0001). Top-5 degenerate (4 classes). Per-class: rhino
+weakest 0.9733 (n=75). Night n=5 — too small to read, stated not hidden.
+
+Detection @ deploy conf 0.25 (parity protocol, own matcher ==
+`detect.parity`: TP 812 / FP 676 / FN 210 identical): recall **0.7945**,
+precision 0.5457, FP/img 0.845. Day/night: night recall HIGHER than day
+(0.8491 vs 0.7754) — the cost is AW day close-up fragmentation, not IR.
+missouri|night 0.8458 vs missouri|day 0.7843; AW|night nominal (12 GT
+boxes). Sweep 0.20/0.30 in the report.
+
+Sequence logic (MOG2 trigger + max-per-trigger, 215 GT sequences):
+trigger observed **0.8884** (191/215; 18 AW no-gate sequences are
+all-warmup bursts, 6 no-detection). Recall ladder union → gated →
+selected: **0.9349 → 0.8093 → 0.7535**; selection loss 5.6%. Frame gate
+rate 0.5963 → inference saving 0.4251. Species on selected frames
+(pure-test bursts) **1.000 (n=75)** vs all test frames 0.993 (n=286) —
+max-conf selection skews toward clean crops. Weak scope:
+missouri|day selected 0.556 (n=27).
+
+Motion gate full-manifest: overall gate rate 0.5636 (AW 1.0 — close-up
+subjects always move; missouri day 0.4877 / night 0.5581).
+
+Failure catalog (7 cases, images + numbers + reproducible keys): AW day
+close-up fragmentation (best fragment IoU 0.414 → FN + 3 FP on one
+frame); MO night edge-hugging blind spot (best floor IoU 0.000 — no
+threshold recovers); tiny-crop upsample confusion (54×26 px → 224²,
+rhino→elephant); frame-edge truncation (elephant→zebra at (0,0));
+closed-set OOV (MO roe deer → "rhino" p=0.57); selection loss (0.81-conf
+fragment outranked a 0.69-conf true match); MOG2 burst-start spike
+(fg_ratio exactly 1.0, 21/22 full-fg frames on the camera are
+first-frame-after-gap — stale background model).
+
+### Verification
+
+- Offline tests: **53 passed** (30 eval — micro/macro on synthetic
+  vectors, split-integrity rejects (wrong split, dup ids, OOV class,
+  count drift, train leak), parity no-fallback matcher, trigger/
+  selection ladder, table emitters; 23 pipeline).
+- Cross-checks inside the run: torch-vs-ONNX 375/375; own matcher vs
+  `wildlife_monitor.detect.parity` identical TP/FP/FN; crop-window
+  recipe 375/375 integer-exact vs the trainer's index.
+- The gate-fp failure case replays MOG2 per-camera with the
+  stage-motion parameters and asserts the replayed fg_ratio equals the
+  cached parquet value (exact match).
+- Determinism: second full `run_eval` reproduced every metric; sampling
+  is seeded (seed 42, same as S2).
+
+### Caveats
+
+- AW night cells are tiny (5 classifier crops, 12 detection GT boxes) —
+  reported, flagged, never aggregated into the night story, which is
+  carried by Missouri (n=253 boxes / 73 GT sequences).
+- Missouri carries no classifier metrics: species disjoint from v0's
+  closed 4-species vocabulary (failure case 5 shows a roe deer scored
+  "rhino" 0.57). CCT20 is metadata-only in this repo — excluded from
+  every stage.
+- Missouri sequence recall is box-level; GT annotates a subset of frames
+  per sequence, so selected-recall there is a lower bound.
+- Detection n is the S2 800-image sample, not full datasets; the AW det
+  stratum spans train/val/test images (pretrained detector — no leak
+  vector, documented).
+- The motion pass uses CLAHE-on-content-IR (S1's bench keyed on the
+  synthetic flag), so trigger rates are not comparable to S1 numbers.
+
 ## Next
 
+- Detector post-step: fragment merge for close-up subjects (fixes the
+  top AW day failure mode and its inherited selection loss) — measured
+  as failure cases 1 and 6.
+- Motion-gate hardening: two-consecutive-frames debounce or a
+  global-change guard on fg ≳ 0.9 (failure case 7 — burst-start spikes).
+- Classifier v0.1 candidates: min-resolution guard or aspect-preserving
+  resize (case 3), and an OOV/none head or embedding threshold before
+  any Missouri deployment (case 5).
 - Wire the producer side for real: run the union stage output through
   the LocalStack ingest path (`infra/`) end to end — jsonl batches are
   already the contract upload shape.
