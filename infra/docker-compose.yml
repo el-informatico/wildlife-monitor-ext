@@ -1,0 +1,41 @@
+# Local emulation of the sprint-3 ingest slice (S3 + Lambda + DynamoDB + SQS).
+#
+# Pin rationale (2026-09): LocalStack 2026.x images refuse to start without
+# an account auth token (distribution change enforced since April 2026).
+# 4.14.0 (2026-02-26) is the last release that runs anonymously, which keeps
+# this repo's "no credentials of any kind" constraint intact. Bump only with
+# that trade-off in mind — or set LOCALSTACK_AUTH_TOKEN and jump to CalVer.
+services:
+  localstack:
+    image: localstack/localstack:4.14.0
+    container_name: wfm-localstack
+    ports:
+      - "4566:4566" # edge gateway: every AWS API on one port
+    environment:
+      - DEBUG=${DEBUG:-0}
+      - LS_LOG=${LS_LOG:-WARN}
+      # Queue URLs without the per-queue subdomain routing: LocalStack still
+      # returns its canonical hostname (localhost.localstack.cloud, public
+      # wildcard DNS → 127.0.0.1), so host clients must rewrite the netloc to
+      # their endpoint — scripts/localstack_smoke.py does exactly that.
+      - SQS_ENDPOINT_STRATEGY=off
+      # Ephemeral by default: state lives in the container, so
+      # `docker compose down` gives a truly clean slate for the smoke test.
+      - PERSISTENCE=${PERSISTENCE:-0}
+    volumes:
+      # Lambda execution: LocalStack spawns function containers through the
+      # host's Docker daemon.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # The daemon runs userns-remap: default, and the lambda runtime files
+      # LocalStack copies into every execution-environment container ship
+      # owned by uid 101000 (its image build user) — outside the subordinate
+      # uid range a remapped container can map, so the daemon rejects the
+      # copy ("container ID 101000 cannot be mapped to a host ID", which
+      # LocalStack logs as an empty ContainerException). The hook re-owns
+      # them to root (always mappable) once the container is ready.
+      - ./scripts/localstack-init/01-fix-lambda-runtime-ownership.sh:/etc/localstack/init/ready.d/01-fix-lambda-runtime-ownership.sh:ro
+    # The host daemon runs userns-remap (root:docker socket is unreachable
+    # from remapped containers); host userns lets LocalStack actually use it.
+    userns_mode: host
+    # The image ships its own HEALTHCHECK against the edge gateway; compose
+    # `--wait` blocks on it, so no custom probe is needed here.
