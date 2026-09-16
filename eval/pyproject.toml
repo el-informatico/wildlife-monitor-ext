@@ -1,0 +1,19 @@
+[project]
+name = "wfm-eval"
+version = "0.1.0"
+description = "G3 perception evaluation: held-out classifier metrics, detection metrics with a day/night split, sequence-trigger logic"
+requires-python = ">=3.12"
+# No pinned dependencies: the harness runs in the sprints-1-2 pipeline venv
+# (OpenCV 5 from source, numpy, pyarrow, the wildlife_monitor package).
+# See pipeline/README.md. The offline tests additionally need pytest.
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+]
+
+[tool.pytest.ini_options]
+# Same layout as pipeline/: repo root on sys.path for `pipeline.*` /
+# `eval.*` imports regardless of invocation cwd.
+pythonpath = ["..", "."]
+testpaths = ["tests"]
