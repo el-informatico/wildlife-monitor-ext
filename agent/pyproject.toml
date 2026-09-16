@@ -1,0 +1,20 @@
+[project]
+name = "wfm-agent"
+version = "0.1.0"
+description = "G4 triage agent: tool-calling loop over perception output with traced conditional actions"
+requires-python = ">=3.12"
+# No pinned dependencies: the core (tools/adapters/loop/actions/baseline)
+# is stdlib-only and testable anywhere. The runners additionally use the
+# sprints-1-2 pipeline venv (OpenCV 5, pyarrow, wildlife_monitor) — see
+# agent/README.md. The offline tests need pytest only.
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+]
+
+[tool.pytest.ini_options]
+# Same layout as pipeline/ and eval/: repo root on sys.path for
+# `agent.*` imports regardless of invocation cwd.
+pythonpath = ["..", "."]
+testpaths = ["tests"]
