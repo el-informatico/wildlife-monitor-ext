@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Commit-message gate: rejects AI-tool ATTRIBUTION in commit messages
+# and any configured sensitive token embedded in the message.
+# Wired via: git config core.hooksPath scripts/hooks
+#
+# Honest limits: `git commit --no-verify` bypasses it; it checks only
+# the message file handed to it; it blocks attribution SHAPES, not
+# subject-matter mentions. The token check fails open when no token
+# list exists (bootstrap), and fails closed when the list exists but
+# is unreadable.
+set -u
+MSG_FILE="${1:-}"
+[ -f "$MSG_FILE" ] || exit 0
+
+VENDOR='(claude|anthropic|chatgpt|openai|copilot|gemini|gpt|llm|ai[- ]assistant)'
+
+if grep -inE "^[[:space:]]*co-authored-by:.*${VENDOR}" "$MSG_FILE" \
+   || grep -inE "(generated|written|authored|assisted)[[:space:]]+(with|by)[[:space:]]+[^.]*${VENDOR}" "$MSG_FILE" \
+   || grep -q '🤖' "$MSG_FILE"; then
+  echo "commit-msg: BLOCKED — AI-tool attribution detected in the commit message." >&2
+  echo "  Remove the attribution line(s) and re-commit; do not use --no-verify." >&2
+  exit 1
+fi
+
+TOKENS="$(git rev-parse --absolute-git-dir)/sensitive-tokens"
+if [ -e "$TOKENS" ] || [ -L "$TOKENS" ]; then
+  if [ ! -f "$TOKENS" ] || [ ! -r "$TOKENS" ]; then
+    echo "commit-msg: sensitive-tokens exists but is not a readable file; failing closed" >&2
+    exit 2
+  fi
+fi
+if [ -s "$TOKENS" ] && [ -r "$TOKENS" ]; then
+  PATTERNS="$(mktemp)" || exit 2
+  trap 'rm -f "$PATTERNS"' EXIT
+  tr -d '\r' < "$TOKENS" | sed -e '/^[[:space:]]*$/d' > "$PATTERNS" || exit 2
+  if [ -s "$PATTERNS" ] && grep -aFqf "$PATTERNS" "$MSG_FILE"; then
+    echo "commit-msg: BLOCKED — the commit message contains a configured sensitive token." >&2
+    exit 1
+  fi
+fi
+exit 0

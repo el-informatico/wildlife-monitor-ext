@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Pre-commit gate: refuses a commit whose STAGED ADDED LINES contain
+# configured sensitive tokens (host paths, sibling-project identifiers).
+# Wired via: git config core.hooksPath scripts/hooks
+#
+# Honest limits: `git commit --no-verify` bypasses it; binary staged
+# content is not scanned; only ADDED lines are scanned, so a file that
+# already carries a token can still be committed as long as the staged
+# change adds no new token lines.
+set -u
+ROOT="$(git rev-parse --show-toplevel)" || {
+  echo "pre-commit: cannot determine repo root" >&2
+  exit 1
+}
+bash "$ROOT/scripts/guard-sensitive-content.sh"

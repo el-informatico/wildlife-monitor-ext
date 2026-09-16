@@ -1,0 +1,36 @@
+# Heavy local artifacts — reproducible from datasets/registries, never tracked.
+/data/
+/downloads/
+/models/
+/manifests/
+/processed/
+/build/
+/baseline-venv/
+/src/opencv/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Secrets / local env — .env.example is tracked, real .env never
+.env
+.env.*
+!.env.example
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.auto.tfvars
+
+# Infra build outputs and downloaded tools
+infra/build/
+infra/.tools/
+
+# OS / editor
+.DS_Store
+*.swp
