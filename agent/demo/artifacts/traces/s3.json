@@ -1,0 +1,231 @@
+{
+  "action": {
+    "approval_required": true,
+    "evidence_package": true,
+    "face_blur_required": true,
+    "policy_refs": [
+      "PERSON_CONFIRM_CONF",
+      "RESTRICTED_WINDOW",
+      "approval-policy"
+    ],
+    "priority": "high",
+    "rationale": [
+      "person max conf 0.9038 ≥ 0.5",
+      "zone Z-missouri-L00 restricted, curfew window ['18:00', '06:00'] active at local hour 23",
+      "history: 0 person events in 72h lookback",
+      "approval is REQUIRED before any action on people — the system approves, never accuses"
+    ],
+    "reason": "person detected in restricted zone during curfew — routed to the human approval queue with an evidence package",
+    "type": "escalate"
+  },
+  "backend": "rules-v1",
+  "camera_id": "missouri-L00",
+  "captured_at": "2026-03-10T23:00:00-06:00",
+  "event_id": "aw-00095",
+  "schema": "wfm-triage-trace/v1",
+  "steps": [
+    {
+      "args": {
+        "event_id": "aw-00095"
+      },
+      "kind": "tool_call",
+      "step": 1,
+      "tool": "get_detection"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "camera_id": "missouri-L00",
+        "captured_at": "2026-03-10T23:00:00-06:00",
+        "clock_source": "pinned-demo",
+        "counts_by_label": {
+          "animal": 2,
+          "person": 3
+        },
+        "detections": [
+          {
+            "bbox": [
+              0.6164,
+              0.3139,
+              0.7013,
+              0.7122
+            ],
+            "confidence": 0.9038,
+            "label": "person"
+          },
+          {
+            "bbox": [
+              0.1661,
+              0.1906,
+              0.5227,
+              0.7006
+            ],
+            "confidence": 0.8097,
+            "label": "animal",
+            "species": "elephant"
+          },
+          {
+            "bbox": [
+              0.1535,
+              0.3788,
+              0.3079,
+              0.7859
+            ],
+            "confidence": 0.7225,
+            "label": "person"
+          },
+          {
+            "bbox": [
+              0.4786,
+              0.2568,
+              0.6153,
+              0.6708
+            ],
+            "confidence": 0.7168,
+            "label": "person"
+          },
+          {
+            "bbox": [
+              0.4782,
+              0.2562,
+              0.6165,
+              0.6764
+            ],
+            "confidence": 0.3581,
+            "label": "animal",
+            "species": "elephant"
+          }
+        ],
+        "event_id": "aw-00095",
+        "max_conf_by_label": {
+          "animal": 0.8097,
+          "person": 0.9038
+        },
+        "model": {
+          "name": "MDV6-yolov10-c",
+          "runtime": "cv2.dnn (OpenCV 5.0.0, engine new)"
+        },
+        "night": {
+          "content_ir": false,
+          "synthetic_flag": false
+        },
+        "pass": 1,
+        "reanalysis_of": null,
+        "species_scope": "closed-set:v0 (out-of-vocabulary species map to the nearest trained class — G3 failure case 5; species never gates an action, it only annotates)"
+      },
+      "step": 2,
+      "tool": "get_detection"
+    },
+    {
+      "args": {
+        "camera_id": "missouri-L00"
+      },
+      "kind": "tool_call",
+      "step": 3,
+      "tool": "query_zone"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "policy_note": "simulated zone policy (S4): per-camera restricted flag from the ETL synthetic layer; restricted window fixed at 18:00–06:00 local",
+        "restricted": true,
+        "restricted_window": [
+          "18:00",
+          "06:00"
+        ],
+        "zone_id": "Z-missouri-L00",
+        "zone_name": "simulated sector — missouri-L00"
+      },
+      "step": 4,
+      "tool": "query_zone"
+    },
+    {
+      "args": {
+        "at": "2026-03-10T23:00:00-06:00",
+        "camera_id": "missouri-L00",
+        "clock_source": "pinned-demo"
+      },
+      "kind": "tool_call",
+      "step": 5,
+      "tool": "query_hour"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "camera_id": "missouri-L00",
+        "clock_source": "pinned-demo",
+        "curfew_active": true,
+        "curfew_window": [
+          "18:00",
+          "06:00"
+        ],
+        "hour": 23,
+        "local_time": "2026-03-10T23:00:00-06:00",
+        "restricted": true,
+        "zone_id": "Z-missouri-L00"
+      },
+      "step": 6,
+      "tool": "query_hour"
+    },
+    {
+      "args": {
+        "camera_id": "missouri-L00",
+        "exclude_event_id": "aw-00095",
+        "lookback_hours": 72
+      },
+      "kind": "tool_call",
+      "step": 7,
+      "tool": "query_history"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "by_label": {},
+        "camera_id": "missouri-L00",
+        "events": 0,
+        "last_person_at": null,
+        "lookback_hours": 72,
+        "max_conf": null,
+        "person_events": 0,
+        "species_seen": []
+      },
+      "step": 8,
+      "tool": "query_history"
+    },
+    {
+      "action": {
+        "approval_required": true,
+        "evidence_package": true,
+        "face_blur_required": true,
+        "policy_refs": [
+          "PERSON_CONFIRM_CONF",
+          "RESTRICTED_WINDOW",
+          "approval-policy"
+        ],
+        "priority": "high",
+        "rationale": [
+          "person max conf 0.9038 ≥ 0.5",
+          "zone Z-missouri-L00 restricted, curfew window ['18:00', '06:00'] active at local hour 23",
+          "history: 0 person events in 72h lookback",
+          "approval is REQUIRED before any action on people — the system approves, never accuses"
+        ],
+        "reason": "person detected in restricted zone during curfew — routed to the human approval queue with an evidence package",
+        "type": "escalate"
+      },
+      "kind": "decision",
+      "policy_refs": [
+        "PERSON_CONFIRM_CONF",
+        "RESTRICTED_WINDOW",
+        "approval-policy"
+      ],
+      "rationale": [
+        "person max conf 0.9038 ≥ 0.5",
+        "zone Z-missouri-L00 restricted, curfew window ['18:00', '06:00'] active at local hour 23",
+        "history: 0 person events in 72h lookback",
+        "approval is REQUIRED before any action on people — the system approves, never accuses"
+      ],
+      "step": 9
+    }
+  ],
+  "trace_id": "sha256:d3f3d863972af726"
+}

@@ -1,0 +1,186 @@
+{
+  "action": {
+    "conf_floor": 0.1,
+    "deploy_conf": 0.25,
+    "policy_refs": [
+      "NIGHT_REANALYSIS_MAX_CONF",
+      "REANALYSIS_PREPROCESS",
+      "G3-failure-case-2",
+      "G3-night-recall-0.8491"
+    ],
+    "preprocess": "clahe-gray(clip=3.0, tile=(8,8))",
+    "rationale": [
+      "content-IR night frame (content-ir (mean HSV saturation < 25, G3 definition))",
+      "animal max conf 0.3417 < 0.45 — inside the marginal band where G3 pinned the night failure mode (small edge-hugging targets, failure case 2)",
+      "re-analysis changes the QUESTION (CLAHE preprocessing + floor 0.1), then the pass-2 output re-enters this loop"
+    ],
+    "reason": "marginal night detection — re-run perception with night preprocessing at the lower decode floor before acting",
+    "type": "night_reanalysis"
+  },
+  "backend": "rules-v1",
+  "camera_id": "missouri-L00",
+  "captured_at": "2026-03-10T04:01:11-06:00",
+  "event_id": "mo-04612",
+  "schema": "wfm-triage-trace/v1",
+  "steps": [
+    {
+      "args": {
+        "event_id": "mo-04612"
+      },
+      "kind": "tool_call",
+      "step": 1,
+      "tool": "get_detection"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "camera_id": "missouri-L00",
+        "captured_at": "2026-03-10T04:01:11-06:00",
+        "clock_source": "manifest-synthetic",
+        "counts_by_label": {
+          "animal": 1
+        },
+        "detections": [
+          {
+            "bbox": [
+              0.0398,
+              0.5656,
+              0.0737,
+              0.6072
+            ],
+            "confidence": 0.3417,
+            "label": "animal",
+            "species": "zebra"
+          }
+        ],
+        "event_id": "mo-04612",
+        "max_conf_by_label": {
+          "animal": 0.3417
+        },
+        "model": {
+          "name": "MDV6-yolov10-c",
+          "runtime": "cv2.dnn (OpenCV 5.0.0, engine new)"
+        },
+        "night": {
+          "content_ir": true,
+          "synthetic_flag": true
+        },
+        "pass": 1,
+        "reanalysis_of": null,
+        "species_scope": "closed-set:v0 (out-of-vocabulary species map to the nearest trained class — G3 failure case 5; species never gates an action, it only annotates)"
+      },
+      "step": 2,
+      "tool": "get_detection"
+    },
+    {
+      "args": {
+        "camera_id": "missouri-L00"
+      },
+      "kind": "tool_call",
+      "step": 3,
+      "tool": "query_zone"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "policy_note": "simulated zone policy (S4): per-camera restricted flag from the ETL synthetic layer; restricted window fixed at 18:00–06:00 local",
+        "restricted": true,
+        "restricted_window": [
+          "18:00",
+          "06:00"
+        ],
+        "zone_id": "Z-missouri-L00",
+        "zone_name": "simulated sector — missouri-L00"
+      },
+      "step": 4,
+      "tool": "query_zone"
+    },
+    {
+      "args": {
+        "at": "2026-03-10T04:01:11-06:00",
+        "camera_id": "missouri-L00",
+        "clock_source": "manifest-synthetic"
+      },
+      "kind": "tool_call",
+      "step": 5,
+      "tool": "query_hour"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "camera_id": "missouri-L00",
+        "clock_source": "manifest-synthetic",
+        "curfew_active": true,
+        "curfew_window": [
+          "18:00",
+          "06:00"
+        ],
+        "hour": 4,
+        "local_time": "2026-03-10T04:01:11-06:00",
+        "restricted": true,
+        "zone_id": "Z-missouri-L00"
+      },
+      "step": 6,
+      "tool": "query_hour"
+    },
+    {
+      "args": {
+        "camera_id": "missouri-L00",
+        "exclude_event_id": "mo-04612",
+        "lookback_hours": 72
+      },
+      "kind": "tool_call",
+      "step": 7,
+      "tool": "query_history"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "by_label": {},
+        "camera_id": "missouri-L00",
+        "events": 0,
+        "last_person_at": null,
+        "lookback_hours": 72,
+        "max_conf": null,
+        "person_events": 0,
+        "species_seen": []
+      },
+      "step": 8,
+      "tool": "query_history"
+    },
+    {
+      "action": {
+        "conf_floor": 0.1,
+        "deploy_conf": 0.25,
+        "policy_refs": [
+          "NIGHT_REANALYSIS_MAX_CONF",
+          "REANALYSIS_PREPROCESS",
+          "G3-failure-case-2",
+          "G3-night-recall-0.8491"
+        ],
+        "preprocess": "clahe-gray(clip=3.0, tile=(8,8))",
+        "rationale": [
+          "content-IR night frame (content-ir (mean HSV saturation < 25, G3 definition))",
+          "animal max conf 0.3417 < 0.45 — inside the marginal band where G3 pinned the night failure mode (small edge-hugging targets, failure case 2)",
+          "re-analysis changes the QUESTION (CLAHE preprocessing + floor 0.1), then the pass-2 output re-enters this loop"
+        ],
+        "reason": "marginal night detection — re-run perception with night preprocessing at the lower decode floor before acting",
+        "type": "night_reanalysis"
+      },
+      "kind": "decision",
+      "policy_refs": [
+        "NIGHT_REANALYSIS_MAX_CONF",
+        "REANALYSIS_PREPROCESS",
+        "G3-failure-case-2",
+        "G3-night-recall-0.8491"
+      ],
+      "rationale": [
+        "content-IR night frame (content-ir (mean HSV saturation < 25, G3 definition))",
+        "animal max conf 0.3417 < 0.45 — inside the marginal band where G3 pinned the night failure mode (small edge-hugging targets, failure case 2)",
+        "re-analysis changes the QUESTION (CLAHE preprocessing + floor 0.1), then the pass-2 output re-enters this loop"
+      ],
+      "step": 9
+    }
+  ],
+  "trace_id": "sha256:ce66a20a6f61208c"
+}

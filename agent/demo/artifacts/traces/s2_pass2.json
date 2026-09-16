@@ -1,0 +1,199 @@
+{
+  "action": {
+    "policy_refs": [
+      "REANALYSIS_ONLY_PASS"
+    ],
+    "rationale": [
+      "pass 2 event: re-analysis already ran",
+      "animal max conf 0.1979 after re-parameterized second pass"
+    ],
+    "reason": "re-analysis pass concluded — evidence recorded; no further automatic passes",
+    "type": "archive"
+  },
+  "backend": "rules-v1",
+  "camera_id": "missouri-L00",
+  "captured_at": "2026-03-10T04:01:11-06:00",
+  "event_id": "mo-04612#p2",
+  "schema": "wfm-triage-trace/v1",
+  "steps": [
+    {
+      "args": {
+        "event_id": "mo-04612#p2"
+      },
+      "kind": "tool_call",
+      "step": 1,
+      "tool": "get_detection"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "camera_id": "missouri-L00",
+        "captured_at": "2026-03-10T04:01:11-06:00",
+        "clock_source": "manifest-synthetic",
+        "counts_by_label": {
+          "animal": 4
+        },
+        "detections": [
+          {
+            "bbox": [
+              0.0406,
+              0.5311,
+              0.0894,
+              0.6152
+            ],
+            "confidence": 0.1979,
+            "label": "animal"
+          },
+          {
+            "bbox": [
+              0.4238,
+              0.5865,
+              0.4875,
+              0.6506
+            ],
+            "confidence": 0.1898,
+            "label": "animal"
+          },
+          {
+            "bbox": [
+              0.3888,
+              0.584,
+              0.4882,
+              0.6545
+            ],
+            "confidence": 0.1612,
+            "label": "animal"
+          },
+          {
+            "bbox": [
+              0.0405,
+              0.5638,
+              0.0731,
+              0.6068
+            ],
+            "confidence": 0.14,
+            "label": "animal"
+          }
+        ],
+        "event_id": "mo-04612#p2",
+        "max_conf_by_label": {
+          "animal": 0.1979
+        },
+        "model": {
+          "conf_floor": 0.1,
+          "pass": 2,
+          "preprocess": "clahe-gray(clip=3.0, tile=(8,8))",
+          "runtime": "cv2.dnn (OpenCV 5.0.0, engine new)"
+        },
+        "night": {
+          "content_ir": true,
+          "synthetic_flag": true
+        },
+        "pass": 2,
+        "reanalysis_of": "mo-04612",
+        "species_scope": "closed-set:v0 (out-of-vocabulary species map to the nearest trained class — G3 failure case 5; species never gates an action, it only annotates)"
+      },
+      "step": 2,
+      "tool": "get_detection"
+    },
+    {
+      "args": {
+        "camera_id": "missouri-L00"
+      },
+      "kind": "tool_call",
+      "step": 3,
+      "tool": "query_zone"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "policy_note": "simulated zone policy (S4): per-camera restricted flag from the ETL synthetic layer; restricted window fixed at 18:00–06:00 local",
+        "restricted": true,
+        "restricted_window": [
+          "18:00",
+          "06:00"
+        ],
+        "zone_id": "Z-missouri-L00",
+        "zone_name": "simulated sector — missouri-L00"
+      },
+      "step": 4,
+      "tool": "query_zone"
+    },
+    {
+      "args": {
+        "at": "2026-03-10T04:01:11-06:00",
+        "camera_id": "missouri-L00",
+        "clock_source": "manifest-synthetic"
+      },
+      "kind": "tool_call",
+      "step": 5,
+      "tool": "query_hour"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "camera_id": "missouri-L00",
+        "clock_source": "manifest-synthetic",
+        "curfew_active": true,
+        "curfew_window": [
+          "18:00",
+          "06:00"
+        ],
+        "hour": 4,
+        "local_time": "2026-03-10T04:01:11-06:00",
+        "restricted": true,
+        "zone_id": "Z-missouri-L00"
+      },
+      "step": 6,
+      "tool": "query_hour"
+    },
+    {
+      "args": {
+        "camera_id": "missouri-L00",
+        "exclude_event_id": "mo-04612#p2",
+        "lookback_hours": 72
+      },
+      "kind": "tool_call",
+      "step": 7,
+      "tool": "query_history"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "by_label": {},
+        "camera_id": "missouri-L00",
+        "events": 0,
+        "last_person_at": null,
+        "lookback_hours": 72,
+        "max_conf": null,
+        "person_events": 0,
+        "species_seen": []
+      },
+      "step": 8,
+      "tool": "query_history"
+    },
+    {
+      "action": {
+        "policy_refs": [
+          "REANALYSIS_ONLY_PASS"
+        ],
+        "rationale": [
+          "pass 2 event: re-analysis already ran",
+          "animal max conf 0.1979 after re-parameterized second pass"
+        ],
+        "reason": "re-analysis pass concluded — evidence recorded; no further automatic passes",
+        "type": "archive"
+      },
+      "kind": "decision",
+      "policy_refs": [
+        "REANALYSIS_ONLY_PASS"
+      ],
+      "rationale": [
+        "pass 2 event: re-analysis already ran",
+        "animal max conf 0.1979 after re-parameterized second pass"
+      ],
+      "step": 9
+    }
+  ],
+  "trace_id": "sha256:6bd4cce1b08f7786"
+}

@@ -1,0 +1,173 @@
+{
+  "action": {
+    "approval_required": true,
+    "face_blur_required": true,
+    "policy_refs": [
+      "PERSON_CONFIRM_CONF",
+      "G3-failure-case-1",
+      "approval-policy"
+    ],
+    "priority": "normal",
+    "rationale": [
+      "person max conf 0.4102 < 0.5 (fragmentation band — G3 failure case 1: low-conf person boxes on close-up subjects are mostly fragments)",
+      "history: 0 person events in 72h — no repeat signal"
+    ],
+    "reason": "single low-confidence person detection — routed to human review as a probable fragmentation artifact; never auto-escalated",
+    "type": "approval_queue"
+  },
+  "backend": "rules-v1",
+  "camera_id": "missouri-L05",
+  "captured_at": "2026-03-21T11:03:49-06:00",
+  "event_id": "mo-10786",
+  "schema": "wfm-triage-trace/v1",
+  "steps": [
+    {
+      "args": {
+        "event_id": "mo-10786"
+      },
+      "kind": "tool_call",
+      "step": 1,
+      "tool": "get_detection"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "camera_id": "missouri-L05",
+        "captured_at": "2026-03-21T11:03:49-06:00",
+        "clock_source": "manifest-synthetic",
+        "counts_by_label": {
+          "person": 1
+        },
+        "detections": [
+          {
+            "bbox": [
+              0.1653,
+              0.1162,
+              0.2766,
+              0.7434
+            ],
+            "confidence": 0.4102,
+            "label": "person"
+          }
+        ],
+        "event_id": "mo-10786",
+        "max_conf_by_label": {
+          "person": 0.4102
+        },
+        "model": {
+          "name": "MDV6-yolov10-c",
+          "runtime": "cv2.dnn (OpenCV 5.0.0, engine new)"
+        },
+        "night": {
+          "content_ir": true,
+          "synthetic_flag": false
+        },
+        "pass": 1,
+        "reanalysis_of": null,
+        "species_scope": "closed-set:v0 (out-of-vocabulary species map to the nearest trained class — G3 failure case 5; species never gates an action, it only annotates)"
+      },
+      "step": 2,
+      "tool": "get_detection"
+    },
+    {
+      "args": {
+        "camera_id": "missouri-L05"
+      },
+      "kind": "tool_call",
+      "step": 3,
+      "tool": "query_zone"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "policy_note": "simulated zone policy (S4): per-camera restricted flag from the ETL synthetic layer; restricted window fixed at 18:00–06:00 local",
+        "restricted": false,
+        "restricted_window": null,
+        "zone_id": "Z-missouri-L05",
+        "zone_name": "simulated sector — missouri-L05"
+      },
+      "step": 4,
+      "tool": "query_zone"
+    },
+    {
+      "args": {
+        "at": "2026-03-21T11:03:49-06:00",
+        "camera_id": "missouri-L05",
+        "clock_source": "manifest-synthetic"
+      },
+      "kind": "tool_call",
+      "step": 5,
+      "tool": "query_hour"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "camera_id": "missouri-L05",
+        "clock_source": "manifest-synthetic",
+        "curfew_active": null,
+        "curfew_window": null,
+        "hour": 11,
+        "local_time": "2026-03-21T11:03:49-06:00",
+        "restricted": false,
+        "zone_id": "Z-missouri-L05"
+      },
+      "step": 6,
+      "tool": "query_hour"
+    },
+    {
+      "args": {
+        "camera_id": "missouri-L05",
+        "exclude_event_id": "mo-10786",
+        "lookback_hours": 72
+      },
+      "kind": "tool_call",
+      "step": 7,
+      "tool": "query_history"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "by_label": {},
+        "camera_id": "missouri-L05",
+        "events": 0,
+        "last_person_at": null,
+        "lookback_hours": 72,
+        "max_conf": null,
+        "person_events": 0,
+        "species_seen": []
+      },
+      "step": 8,
+      "tool": "query_history"
+    },
+    {
+      "action": {
+        "approval_required": true,
+        "face_blur_required": true,
+        "policy_refs": [
+          "PERSON_CONFIRM_CONF",
+          "G3-failure-case-1",
+          "approval-policy"
+        ],
+        "priority": "normal",
+        "rationale": [
+          "person max conf 0.4102 < 0.5 (fragmentation band — G3 failure case 1: low-conf person boxes on close-up subjects are mostly fragments)",
+          "history: 0 person events in 72h — no repeat signal"
+        ],
+        "reason": "single low-confidence person detection — routed to human review as a probable fragmentation artifact; never auto-escalated",
+        "type": "approval_queue"
+      },
+      "kind": "decision",
+      "policy_refs": [
+        "PERSON_CONFIRM_CONF",
+        "G3-failure-case-1",
+        "approval-policy"
+      ],
+      "rationale": [
+        "person max conf 0.4102 < 0.5 (fragmentation band — G3 failure case 1: low-conf person boxes on close-up subjects are mostly fragments)",
+        "history: 0 person events in 72h — no repeat signal"
+      ],
+      "step": 9
+    }
+  ],
+  "trace_id": "sha256:5096651b746b732f"
+}

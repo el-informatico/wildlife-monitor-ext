@@ -1,0 +1,74 @@
+{
+  "schema": "wfm-s4-showcase/v1",
+  "note": "Every perception payload is the real cv2.dnn corpus detection set for the named image (S2/E2E union run, batches JSONL). Context mode 'corpus' keeps the image's own camera and manifest clock (clock_source manifest-synthetic); mode 'pinned' mounts the SAME payload on a documented simulated context — a different camera and a pinned clock (clock_source pinned-demo) — to exhibit a branch the corpus itself happens not to contain. The original corpus context is recorded beside every pinned scenario in the transcript. No payload is synthesized.",
+  "scenarios": [
+    {
+      "id": "s1",
+      "image_id": "mo-04611",
+      "title": "confident night animal inside a restricted zone during curfew — archive",
+      "point": "the curfew governs human activity, not wildlife: a 0.94 animal at 04:00 in zone Z-missouri-L00 archives without a human",
+      "context": {"mode": "corpus"},
+      "expect": "archive"
+    },
+    {
+      "id": "s2",
+      "image_id": "mo-04612",
+      "title": "marginal night animal — the live second perception pass",
+      "point": "pass 1 returns animal 0.3417 on a content-IR night frame; the agent does not act on it, it re-asks cv2.dnn with the motion-gate CLAHE recipe and decides on the pass-2 output",
+      "context": {"mode": "corpus"},
+      "reanalysis": true,
+      "expect_pass1": "night_reanalysis",
+      "expect_pass2_not": "night_reanalysis"
+    },
+    {
+      "id": "s3",
+      "image_id": "aw-00095",
+      "title": "confirmed person, restricted zone, curfew active — escalate",
+      "point": "the strongest person artifact in the corpus (0.9038, an AW close-up fragmentation per G3 case 1) mounted on missouri-L00 at 23:00: same pixels, context changed, action becomes escalation with blur + evidence package",
+      "context": {
+        "mode": "pinned",
+        "camera_id": "missouri-L00",
+        "captured_at": "2026-03-10T23:00:00-06:00",
+        "original_corpus_context": "african_wildlife-L23, 2026-03-09T15:00:00+02:00, open zone — where the agent queues it (see corpus comparison)"
+      },
+      "expect": "escalate"
+    },
+    {
+      "id": "s4",
+      "image_id": "mo-10786",
+      "title": "person at 0.4102 — below the confirm bar, single occurrence",
+      "point": "G3 catalog person cases live under 0.5; without repeat history the agent reviews at normal priority and never escalates on a fragmentation band",
+      "context": {"mode": "corpus"},
+      "expect": "approval_queue"
+    },
+    {
+      "id": "s5",
+      "image_id": "mo-06604",
+      "title": "person at 0.5164 — 0.0164 over the bar, open zone, midday",
+      "point": "crossing PERSON_CONFIRM_CONF makes the agent treat it as evidence, but the open zone and inactive clock keep it in the queue — this is the event the rules-only baseline escalates blind (corpus comparison divergence)",
+      "context": {"mode": "corpus"},
+      "expect": "approval_queue"
+    },
+    {
+      "id": "s6",
+      "image_id": "aw-00587",
+      "title": "vehicle in a restricted zone during curfew — ranger check",
+      "point": "the corpus's only vehicle detection (0.476) mounted on missouri-L00 at 23:00: not an escalation, a queued check that rangers are expected on the road at night",
+      "context": {
+        "mode": "pinned",
+        "camera_id": "missouri-L00",
+        "captured_at": "2026-03-10T23:00:00-06:00",
+        "original_corpus_context": "african_wildlife-L22, 2026-03-09T08:00:00+02:00, open zone — where both lanes archive it"
+      },
+      "expect": "approval_queue"
+    },
+    {
+      "id": "s7",
+      "image_id": "mo-08536",
+      "title": "empty batch — archive",
+      "point": "cv2.dnn found nothing; note the content-IR night flag is true while the manifest's synthetic is_night is false — night travels with the content flag and nothing else happens",
+      "context": {"mode": "corpus"},
+      "expect": "archive"
+    }
+  ]
+}

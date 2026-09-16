@@ -1,0 +1,149 @@
+{
+  "action": {
+    "policy_refs": [
+      "empty-batch policy"
+    ],
+    "rationale": [
+      "pass 1: 0 detections deployed at conf ≥ 0.25"
+    ],
+    "reason": "no deployed detections — nothing to triage",
+    "type": "archive"
+  },
+  "backend": "rules-v1",
+  "camera_id": "missouri-L00",
+  "captured_at": "2026-03-16T17:00:24-06:00",
+  "event_id": "mo-08536",
+  "schema": "wfm-triage-trace/v1",
+  "steps": [
+    {
+      "args": {
+        "event_id": "mo-08536"
+      },
+      "kind": "tool_call",
+      "step": 1,
+      "tool": "get_detection"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "camera_id": "missouri-L00",
+        "captured_at": "2026-03-16T17:00:24-06:00",
+        "clock_source": "manifest-synthetic",
+        "counts_by_label": {},
+        "detections": [],
+        "event_id": "mo-08536",
+        "max_conf_by_label": {},
+        "model": {
+          "name": "MDV6-yolov10-c",
+          "runtime": "cv2.dnn (OpenCV 5.0.0, engine new)"
+        },
+        "night": {
+          "content_ir": true,
+          "synthetic_flag": false
+        },
+        "pass": 1,
+        "reanalysis_of": null,
+        "species_scope": "closed-set:v0 (out-of-vocabulary species map to the nearest trained class — G3 failure case 5; species never gates an action, it only annotates)"
+      },
+      "step": 2,
+      "tool": "get_detection"
+    },
+    {
+      "args": {
+        "camera_id": "missouri-L00"
+      },
+      "kind": "tool_call",
+      "step": 3,
+      "tool": "query_zone"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "policy_note": "simulated zone policy (S4): per-camera restricted flag from the ETL synthetic layer; restricted window fixed at 18:00–06:00 local",
+        "restricted": true,
+        "restricted_window": [
+          "18:00",
+          "06:00"
+        ],
+        "zone_id": "Z-missouri-L00",
+        "zone_name": "simulated sector — missouri-L00"
+      },
+      "step": 4,
+      "tool": "query_zone"
+    },
+    {
+      "args": {
+        "at": "2026-03-16T17:00:24-06:00",
+        "camera_id": "missouri-L00",
+        "clock_source": "manifest-synthetic"
+      },
+      "kind": "tool_call",
+      "step": 5,
+      "tool": "query_hour"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "camera_id": "missouri-L00",
+        "clock_source": "manifest-synthetic",
+        "curfew_active": false,
+        "curfew_window": [
+          "18:00",
+          "06:00"
+        ],
+        "hour": 17,
+        "local_time": "2026-03-16T17:00:24-06:00",
+        "restricted": true,
+        "zone_id": "Z-missouri-L00"
+      },
+      "step": 6,
+      "tool": "query_hour"
+    },
+    {
+      "args": {
+        "camera_id": "missouri-L00",
+        "exclude_event_id": "mo-08536",
+        "lookback_hours": 72
+      },
+      "kind": "tool_call",
+      "step": 7,
+      "tool": "query_history"
+    },
+    {
+      "kind": "tool_result",
+      "result": {
+        "by_label": {},
+        "camera_id": "missouri-L00",
+        "events": 0,
+        "last_person_at": null,
+        "lookback_hours": 72,
+        "max_conf": null,
+        "person_events": 0,
+        "species_seen": []
+      },
+      "step": 8,
+      "tool": "query_history"
+    },
+    {
+      "action": {
+        "policy_refs": [
+          "empty-batch policy"
+        ],
+        "rationale": [
+          "pass 1: 0 detections deployed at conf ≥ 0.25"
+        ],
+        "reason": "no deployed detections — nothing to triage",
+        "type": "archive"
+      },
+      "kind": "decision",
+      "policy_refs": [
+        "empty-batch policy"
+      ],
+      "rationale": [
+        "pass 1: 0 detections deployed at conf ≥ 0.25"
+      ],
+      "step": 9
+    }
+  ],
+  "trace_id": "sha256:7a7339f9321c54eb"
+}

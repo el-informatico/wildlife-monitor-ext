@@ -58,6 +58,7 @@ def load_manifest_rows(path: Path = MANIFEST_PARQUET,
     on the corpus path)."""
     import pyarrow.parquet as pq
 
+    columns = list(dict.fromkeys(columns))     # tolerate caller dupes
     table = pq.read_table(path, columns=columns)
     names = table.column_names
     return [dict(zip(names, vals)) for vals in zip(
