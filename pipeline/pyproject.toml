@@ -1,0 +1,19 @@
+[project]
+name = "wfm-pipeline"
+version = "0.1.0"
+description = "E2E union stage: MDv6 detections -> crops -> classifier v0 species -> schema-valid records"
+requires-python = ">=3.12"
+# No pinned dependencies: the stage runs in the sprints-1-2 pipeline venv
+# (OpenCV 5 from source, numpy, pyarrow, the wildlife_monitor package).
+# See README.md. The offline tests additionally need pytest.
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+]
+
+[tool.pytest.ini_options]
+# ".." puts this repo's root on sys.path so both `pipeline.*` and the
+# read-only `infra.schema` contract import, regardless of invocation cwd.
+pythonpath = ["..", "."]
+testpaths = ["tests"]
