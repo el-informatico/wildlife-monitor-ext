@@ -15,6 +15,13 @@ License: Apache-2.0 (see `LICENSE`).
 - `pipeline/` — E2E union stage: MDv6 detections → training-recipe crops →
   classifier v0 species → contract-valid records over the ETL sample, with
   measured sanity metrics. See `pipeline/README.md` and `STATUS.md`.
+- `eval/` — G3 perception evaluation: metrics harness with split
+  integrity, day/night split, sequence logic, and a 7-case failure
+  catalog. See `eval/G3-REPORT.md`.
+- `agent/` — S4 triage agent (Gate G4): Bedrock-style tool loop over
+  perception output with traced conditional actions, a rules-only
+  kill-switch baseline, and a live second-pass night re-analysis demo.
+  See `agent/README.md` and `agent/G4-REPORT.md`.
 - `src/opencv/` — OpenCV 5 source tree used for the local build (untracked;
   fetch upstream).
 - `data/`, `downloads/`, `models/`, `processed/`, `manifests/`, `build/`,

@@ -3,8 +3,9 @@
 This repo holds the extension work around the sprints-1-2 pipeline that
 lives in the sibling `wildlife-monitor` repo (its STATUS.md tracks S1/S2
 and classifier v0): untracked datasets/models/artifacts, the sprint-3
-`infra/` ingest slice, the `pipeline/` E2E union stage, and — as of
-2026-09-16 — the `eval/` G3 perception evaluation documented below.
+`infra/` ingest slice, the `pipeline/` E2E union stage, the `eval/` G3
+perception evaluation, and — as of 2026-09-16 — the `agent/` S4 triage
+agent, all documented below.
 
 ## infra — S3 → Lambda → DynamoDB ingest slice (2026-09-16)
 
@@ -223,8 +224,96 @@ first-frame-after-gap — stale background model).
 - The motion pass uses CLAHE-on-content-IR (S1's bench keyed on the
   synthetic flag), so trigger rates are not comparable to S1 numbers.
 
+## S4 triage agent — Gate G4, kill-switch B closed (2026-09-16)
+
+Sprint 4: a Bedrock-style tool-calling agent over the perception output,
+offline-first (deterministic reference backend behind a documented
+adapter interface; the Bedrock adapter is a stub that refuses to run
+without credentials). Full verdict with every table:
+`agent/G4-REPORT.md`. Demo transcript + traces (committed):
+`agent/demo/artifacts/`. Kill-switch B corpus comparison (committed):
+`agent/artifacts/corpus_comparison.{json,md}`.
+
+### What ran
+
+    ../wildlife-monitor/.venv/bin/python -m pytest eval/tests pipeline/tests agent/tests -q
+    ../wildlife-monitor/.venv/bin/python -m agent.run_corpus
+    ../wildlife-monitor/.venv/bin/python -m agent.demo.run_demo
+
+### What it does
+
+Per detection batch: consults four tools (`get_detection`, `query_zone`,
+`query_hour`, `query_history` — specs carry the Bedrock toolConfig
+shape) against an in-memory store, then one conditional action
+(escalate / approval_queue / night_reanalysis / archive) with a
+byte-deterministic trace (`wfm-triage-trace/v1`, `trace_id` =
+sha256 of the trace content — no wall clock; uniform consult = exactly
+9 steps). Loop safety: `MAX_STEPS` budget and any tool error both close
+with the documented safe default (approval_queue) — a stuck agent can
+never drop an event or auto-act on it. Person evidence always carries
+`approval_required` + `face_blur_required` (the product approves, never
+accuses).
+
+### Gate G4: met — cv2.dnn output changes decisions, in trace
+
+The demo's core sequence (s2, live pixels): pass-1 animal 0.3417 on a
+content-IR night frame → `night_reanalysis` → a REAL second MDv6 pass
+(grayscale → CLAHE(3.0, (8,8)) — the motion gate's recipe — decoded at
+floor 0.10) finds four marginal animal boxes the deploy floor never
+surfaced → the pass-2 event re-enters the loop → archive on the pass-2
+output. Six further scenarios exhibit escalation (person ≥ 0.50 +
+restricted zone + curfew), the approval queue (0.4102 below the bar;
+0.5164 over the bar but open zone — the exact event the baseline
+escalates blind), and a vehicle ranger check. Every fixture expectation
+is asserted at run time; re-runs reproduce every artifact byte-identically.
+
+### Kill-switch B: not triggered
+
+`rules-only-v1` baseline (identical perception thresholds, NO context)
+vs the agent over all 200 corpus events: 195 agree, the 5 divergences
+are all confirmed persons in open zones midday that the baseline
+escalates blind (5 highest-urgency pages for probable fragmentation
+artifacts — G3 cases 1/3) while the agent queues with zone/clock
+rationale. Zero person evidence is dropped in either lane. Night
+re-analysis fires identically in both (9 events — shared perception
+rule). The agent's measured value is urgency correctness + one
+vigilance branch (vehicle + curfew, demo s6) — stated honestly in the
+report: the winning lane is the deterministic backend; a future Bedrock
+backend must beat it on this same corpus before its cost is justified.
+Bedrock spend this sprint: $0 (§7 note in the report).
+
+### Verification
+
+- Offline tests: **132 passed** (30 eval + 23 pipeline + **79 agent** —
+  tool dispatch/curfew math, every decision-table branch, tool-error
+  and budget safe defaults, trace determinism, baseline head-to-head,
+  scenario assembly validation).
+- The demo asserts each scenario's expected decision at run time;
+  corpus and demo artifacts verified byte-identical across re-runs
+  (traces to `processed/`, gitignored).
+
+### Caveats
+
+- Zone policy (per-camera `zone_restricted` + fixed 18:00–06:00 window)
+  and the clock (synthetic manifest `camera_ts` + fixed per-dataset
+  offset) are SIMULATED context, tagged in every trace
+  (`manifest-synthetic` / `pinned-demo`); demo scenarios s3/s6 pin
+  documented contexts to exhibit branches absent from the corpus.
+- Night is always the G3 content-IR flag, never the synthetic
+  `is_night`. History on the corpus is the corpus itself (sparse — the
+  repeat-signal branch never fired in the run; unit-tested, policy not
+  measured behavior).
+- Corpus events carry no timestamp — `camera_ts`/zone join via
+  `image_id` → manifest `location_id` (verified consistent per camera
+  across all 26,177 rows).
+
 ## Next
 
+- Agent: exercise the Bedrock adapter lane once AWS credentials resume
+  (offline stub documented in `agent/adapters.py`) — it must beat
+  `rules-v1` on the committed corpus comparison before its cost is
+  justified; revisit the person fragmentation band if the G3 fragment
+  merge lands (it would collapse several s4/s5-style queue events).
 - Detector post-step: fragment merge for close-up subjects (fixes the
   top AW day failure mode and its inherited selection loss) — measured
   as failure cases 1 and 6.
