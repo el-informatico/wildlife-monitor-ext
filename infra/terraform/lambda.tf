@@ -108,3 +108,60 @@ resource "aws_lambda_function_event_invoke_config" "ingest" {
     }
   }
 }
+
+# --- motion gate (G1) ---------------------------------------------------------
+# MOG2 runs INSIDE the Lambda on the custom execution image (OpenCV 5 baked
+# in — see ../docker/Dockerfile.lambda-py312-opencv5). The zip is a single
+# file; cv2/numpy come from the image, so nothing heavy ships in the archive.
+# It shares the ingest role: the permission surface is identical (S3 reads on
+# the bucket, DynamoDB writes on the table, log tailing).
+
+data "archive_file" "motion_lambda" {
+  type        = "zip"
+  output_path = "${path.module}/../build/motion-lambda.zip"
+
+  source {
+    content  = file("${path.module}/../handler/motion_app.py")
+    filename = "motion_app.py"
+  }
+}
+
+resource "aws_lambda_function" "motion" {
+  function_name    = local.motion_function_name
+  role             = aws_iam_role.ingest.arn
+  filename         = data.archive_file.motion_lambda.output_path
+  source_code_hash = data.archive_file.motion_lambda.output_base64sha256
+
+  handler     = "motion_app.lambda_handler"
+  runtime     = "python3.12"
+  timeout     = var.motion_lambda_timeout
+  memory_size = var.motion_lambda_memory
+
+  environment {
+    variables = merge(
+      {
+        DYNAMO_TABLE       = var.table_name
+        MOTION_JOBS_PREFIX = var.motion_jobs_prefix
+        MAX_JOB_FRAMES     = tostring(var.max_motion_job_frames)
+        LOG_LEVEL          = local.log_level
+      },
+      var.lambda_aws_endpoint == "" ? {} : { AWS_ENDPOINT_URL = var.lambda_aws_endpoint }
+    )
+  }
+
+  depends_on = [aws_iam_role_policy.ingest]
+}
+
+# Same poison policy as the ingest function: a malformed motion job fails
+# the invocation and lands on the shared DLQ instead of retrying hot.
+resource "aws_lambda_function_event_invoke_config" "motion" {
+  function_name                = aws_lambda_function.motion.function_name
+  maximum_retry_attempts       = 0
+  maximum_event_age_in_seconds = 360
+
+  destination_config {
+    on_failure {
+      destination = aws_sqs_queue.ingest_dlq.arn
+    }
+  }
+}

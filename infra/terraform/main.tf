@@ -30,7 +30,8 @@ provider "aws" {
 }
 
 locals {
-  function_name = "wfm-detection-ingest-${var.environment}"
-  dlq_name      = "${local.function_name}-dlq"
-  log_level     = "INFO"
+  function_name        = "wfm-detection-ingest-${var.environment}"
+  motion_function_name = "wfm-motion-gate-${var.environment}"
+  dlq_name             = "${local.function_name}-dlq"
+  log_level            = "INFO"
 }

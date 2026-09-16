@@ -59,3 +59,29 @@ variable "lambda_memory" {
   type    = number
   default = 256
 }
+
+# --- motion gate (G1: MOG2 inside the Lambda) --------------------------------
+
+variable "motion_jobs_prefix" {
+  description = "S3 prefix holding motion-job files (one JSON per camera, frames pre-sorted by capture time)."
+  type        = string
+  default     = "motion-jobs/"
+}
+
+variable "max_motion_job_frames" {
+  description = "Per-job frame cap enforced by the handler (poison guard)."
+  type        = number
+  default     = 2500
+}
+
+variable "motion_lambda_timeout" {
+  description = "Seconds — a job decodes up to max_motion_job_frames images end-to-end."
+  type        = number
+  default     = 900
+}
+
+variable "motion_lambda_memory" {
+  description = "MB — image decode + MOG2 headroom (frames capped at 1024px long side)."
+  type        = number
+  default     = 1024
+}
