@@ -1,0 +1,18 @@
+[project]
+name = "wfm-infra"
+version = "0.1.0"
+description = "Sprint-3 infrastructure for the wildlife monitor: ingest Lambda, schema, tests, LocalStack tooling"
+requires-python = ">=3.12"
+# The Lambda runtime itself is stdlib + the AWS-provided boto3; nothing to pin here.
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "boto3>=1.40",
+    "moto>=5.1",
+    "pytest>=8.4",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

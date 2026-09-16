@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "source": {
+    "key": "raw/cam-01/2026-09-16/a001.jpg",
+    "image_id": "aw-00007",
+    "dataset": "african_wildlife",
+    "width": 550,
+    "height": 412,
+    "is_night": false,
+    "captured_at": "2026-09-16T10:15:00Z",
+    "camera_id": "cam-01"
+  },
+  "model": {
+    "name": "MDV6-yolov10-c",
+    "runtime": "cv2.dnn (OpenCV 5.0.0)"
+  },
+  "detections": [
+    {
+      "label": "animal",
+      "species": "zebra",
+      "confidence": 0.5689,
+      "bbox": [0.2484, 0.2193, 0.6582, 0.8228]
+    },
+    {
+      "label": "animal",
+      "species": null,
+      "confidence": 0.4036,
+      "bbox": [0.6128, 0.1954, 1.0, 0.7302]
+    }
+  ]
+}
