@@ -83,6 +83,57 @@ chunked `TransactWriteItems` (60/chunk). A cancelled transaction whose
 cancellation reasons are all `ConditionalCheckFailed` is treated as
 "already ingested"; anything else (throttle, validation) propagates.
 
+## Motion gate — Gate G1's AWS half
+
+A second Lambda (`handler/motion_app.py`, `wfm-motion-gate-<env>`) runs the
+project's MOG2 motion recipe **inside** the function, on the ETL's media:
+
+```
+  ETL manifest (parquet, read-only)
+        │ scripts/export_manifest_json.py   (pipeline venv — pyarrow)
+        ▼
+  build/media-manifest.json
+        │ scripts/g1_batch_load.py           (infra venv — boto3)
+        │   · upload frames → raw/<rel_path>
+        │   · write motion-jobs/<dataset>/<camera>.json   (one job per
+        │     camera, frames in capture order — triggers the Lambda)
+        ▼
+  ┌────────────────────────┐  s3:ObjectCreated:* (prefix motion-jobs/)
+  │ S3  wfm-raw-media-dev  │──────────────► Lambda wfm-motion-gate
+  │  raw/…  motion-jobs/…  │                python3.12 + OpenCV 5 image
+  └────────────────────────┘                decode→cap 1024→gray→CLAHE(night)
+                                            →MOG2→fg_ratio→gate
+        marker pk=IDEP#<sha256(bucket|key|version)> sk=MOTIONJOB
+        motion row pk=CAM#<camera> sk=<ts>|<frame_id>  entity=motion
+        (gsi-source populated; gsi-species sparse — motion rows skip gs1*)
+```
+
+- **Recipe parity** — history=50, varThreshold=24.0, detectShadows=False,
+  learningRate=-1.0, CLAHE(3.0,(8,8)) on night frames only, first 2 frames
+  per camera warmup, pass when fg_ratio > 0.02: mirrored from the local
+  benchmark (constants at the top of `motion_app.py`), and the offline
+  tests pin the boundary (0.02 exactly → filtered).
+- **Idempotency** copies the ingest handler's contract: job marker keyed by
+  object version short-circuits replays; rows carry deterministic
+  `sk = <canonical ts>|sha256(source_key)[:12]` and are written under
+  `attribute_not_exists` in chunked transactions, so a re-processed job
+  cannot duplicate rows.
+- **Failure policy** — poison job JSON raises `MotionJobError` → DLQ;
+  undecodable/missing frames are skips (counted in `frames_failed`).
+- **OpenCV 5 in the runtime** — the function's execution image is
+  `wfm-lambda-py312-opencv5:g1` (Ubuntu 24.04 + the project's source-built
+  OpenCV 5, harvested from the pipeline venv by `scripts/build-lambda-image.sh`).
+  LocalStack routes python3.12 functions onto it via
+  `LAMBDA_RUNTIME_IMAGE_MAPPING` (.env), and the `02-` init hook lets the
+  daemon-local image be used. `cv2.__version__` is read inside the handler
+  and stamped on every row as `model_runtime` — the import is the point of
+  the gate, so it carries its own evidence. On real AWS the same handler
+  deploys unchanged (zip + container image instead of the mapping).
+
+Measured end-to-end over the African Wildlife dataset (1,504 images, 24
+cameras): commands, raw outputs and the verdict live in
+**[G1-AWS-REPORT.md](G1-AWS-REPORT.md)**.
+
 ## Why Terraform (and not SAM/CDK)
 
 The repo is Python + uv, but that argues for boto3 in the *handler and tests*,
@@ -103,15 +154,21 @@ infra/
 ├── docker-compose.yml        # pinned LocalStack 4.14.0 + docker.sock + userns_mode
 ├── .env.example              # LocalStack endpoints/dummy creds (no secrets)
 ├── schema.py                 # detection-batch contract (stdlib only)
-├── handler/app.py            # the Lambda (stdlib + boto3)
-├── terraform/                # provider/S3/DynamoDB/Lambda/SQS + outputs
-├── tests/                    # 63 pytest tests (moto — LocalStack NOT required)
+├── handler/app.py            # the ingest Lambda (stdlib + boto3)
+├── handler/motion_app.py     # the motion-gate Lambda (MOG2 on the exec image)
+├── terraform/                # provider/S3/DynamoDB/2×Lambda/SQS + outputs
+├── tests/                    # 90 pytest tests (moto — LocalStack NOT required)
 │   └── fixtures/detection_batch_sample.json   # real S2 output shape
 ├── scripts/
 │   ├── install-terraform.sh  # pinned binary → infra/.tools/ (gitignored)
-│   ├── localstack-init/      # container init hooks (userns-remap workaround)
-│   └── localstack_smoke.py   # up → apply → upload → assert → DLQ → teardown
+│   ├── build-lambda-image.sh # pipeline venv's OpenCV 5 → wfm-lambda-py312-opencv5:g1
+│   ├── localstack-init/      # container init hooks (userns + local-image workarounds)
+│   ├── localstack_smoke.py   # up → apply → upload → assert → DLQ → teardown
+│   ├── export_manifest_json.py  # ETL parquet → JSON (pipeline venv; pyarrow)
+│   ├── g1_plan.py            # pure planning: manifest rows → jobs/addresses
+│   └── g1_batch_load.py      # G1 driver: media+jobs upload → wait → verify
 ├── VALIDATION.md             # measured results of every mandated check
+├── G1-AWS-REPORT.md          # Gate G1 AWS half: the 1,504-image load, measured
 └── pyproject.toml            # uv project: dev deps boto3/moto/pytest only
 ```
 
@@ -150,6 +207,30 @@ mirrored networking, where connections to a docker-published `127.0.0.1:port`
 from inside WSL never arrive, while `[::1]` works on any docker host that
 publishes on `[::]`. Set `aws_endpoint`/`AWS_ENDPOINT_URL` to
 `http://localhost:4566` if your host prefers plain IPv4.
+
+### Running the G1 batch load (motion gate)
+
+Prerequisites: the stack above deployed, `.env` sourcing the
+`LAMBDA_RUNTIME_IMAGE_MAPPING` line (and the image built once by
+`scripts/build-lambda-image.sh` — see its header). Then, from `infra/`:
+
+```bash
+set -a && source .env && set +a
+
+# 1. manifest extract (needs pyarrow → the pipeline venv; parquet is read-only)
+<path-to-pipeline-venv>/bin/python scripts/export_manifest_json.py \
+    --parquet ../processed/manifest.parquet --out build/media-manifest.json
+
+# 2. load + verify (infra venv: boto3)
+.venv/bin/python scripts/g1_batch_load.py \
+    --manifest build/media-manifest.json --dataset african_wildlife
+```
+
+Every phase is idempotent — rerunning skips already-uploaded media
+(HEAD-first) and already-completed jobs (marker check). Phases can be
+selected (`--phases wait,verify`) and a small smoke is
+`--dataset african_wildlife --limit 5`. The driver writes its JSON metrics
+to `build/g1-load-report.json`.
 
 ## Sprint mapping
 
