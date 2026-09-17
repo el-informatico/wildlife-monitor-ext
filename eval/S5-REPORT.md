@@ -119,6 +119,21 @@ Cross-reference: all 7 person events in the S4 200-event corpus are
 queued by the agent (baseline escalates 5 blind — committed G4
 comparison).
 
+**Update 2026-09-17 (`eval/PERSON-PR-REPORT.md`): the gap is closed
+with measurements.** Person P/R is now **measured** on person-labelled
+public held-outs. The deeper Wellington finding is documented there:
+the *public labels themselves* enumerate 17 categories (15 animals +
+`empty` + `unclassifiable`) with no person class at all, and SWG's
+public box file keeps all 781 person-annotated images under
+`private/` — person-labelled camera-trap GT is structurally scarce, so
+the measurement runs on authorized equivalents instead:
+Seattle(ish) Camera Traps in-domain (image level, **P 0.9591 /
+R 0.8788** @ deploy conf 0.25, single-identity bound) and COCO
+val2017 out-of-domain (box level, P 0.5479 / R 0.3829). Vehicle is
+measured unreliable in both tiers (0/60 in-domain at every threshold).
+This section's statement was correct for the data available to S5 and
+is superseded by the measured numbers.
+
 ## 5. Latency and cost — new engine vs legacy
 
 Full tables: `processed/s5_latency.md` + `s5_latency_report.json`.
@@ -167,7 +182,7 @@ reportados."*
 | latency table new vs legacy, CPU | **MET** — 3-lane same-protocol table + fresh re-run, new engine +13% faster than legacy at e2e p50 |
 | CPU vs Graviton | **PARTIAL (per brief: optional note)** — Graviton NOT MEASURED, honestly; at-parity arithmetic + a documented bench procedure instead of a fabricated number |
 | cost per 1M imgs | **MET** — $3.67 (new) vs $4.16 (legacy) on c7i.large, assumptions stated |
-| Wellington P/R reported | **MET as an honest gap** — NOT_COMPUTABLE (dataset absent, zero person GT locally), probe evidence + person-event-load substitute on the available held-out |
+| Wellington P/R reported | **MET, then closed 0917** — honest NOT_COMPUTABLE within S5's scope (dataset absent, zero person GT locally); person P/R since **measured** on person-labelled held-outs (`eval/PERSON-PR-REPORT.md`: Seattle image-level P 0.9591 / R 0.8788 @0.25; COCO box-level P 0.5479 / R 0.3829) |
 
 **G5: MET** (Graviton unmeasured per its optional status; Wellington
 P/R satisfied by the stated-honestly path the brief itself allows).

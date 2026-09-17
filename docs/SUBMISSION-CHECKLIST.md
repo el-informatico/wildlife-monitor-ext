@@ -110,7 +110,7 @@ tripwire, not containment.
 |---|---|---|---|---|---|
 | a | publish decision: two-repo (default) vs one-repo | human | before 10-22 | yes — gates publication-readiness | one-repo fires the §4 conditional finding: tokenize `../wildlife-monitor` references + make the `pipeline/e2e.py` runtime import optional, then re-run audit D |
 | b | optional: real Graviton bench if AWS access resumes | human (AWS) | ideally before 10-24; skippable | no — optional per the brief | procedure in `eval/S5-REPORT.md` §5 (`--fresh` on c7g, arm64 wheels, same first-100 images, warmup 3 excluded); would replace the at-parity $2.99/1M arithmetic in `processed/s5_latency.md` |
-| c | optional: Wellington person-labelled held-out ingest | human (data) | skippable | no | would upgrade person P/R from NOT_COMPUTABLE (`eval/S5-REPORT.md` §4); today's person numbers are load, not errors |
+| c | ~~optional: Wellington person-labelled held-out ingest~~ **done 0917** (automation) | — | done | no | measured on person-labelled held-outs (`eval/PERSON-PR-REPORT.md`): person P 0.9591 / R 0.8788 in-domain @ deploy conf (single-identity bound), COCO box P 0.5479 / R 0.3829; vehicle measured unreliable (0/60); Wellington itself documented uncomputable — its public labels carry no person class |
 | d | Devpost form may require images/screenshots | human | take 10-20 during video recording; use at form drafting 10-23 | yes — form completeness | capture from the dashboard (map, species, approval queue, `X-Face-Blur` behavior) and the `eval/failures/` gallery in the same session as the video |
 
 ## 6. Submission-day runbook (ordered, terse)

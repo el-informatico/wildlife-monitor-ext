@@ -23,7 +23,7 @@ always, at serve time.
 | G2 | detector parity, `cv2.dnn` vs PyTorch reference | **MET** (sprints-1-2; cross-checked here) | this repo's independent matcher reproduces the reference matcher's TP/FP/FN **identically — 812 / 676 / 210** at deploy conf 0.25 (IoU ≥ 0.5) |
 | G3 | eval harness + metrics + failure catalog | **MET** | classifier v0 top-1 **0.9867** held-out; detection recall **0.7945** @ conf 0.25 (800-image sample); sequence ladder 0.9349 → 0.8093 → 0.7535; 7-case failure catalog; `eval/G3-REPORT.md` |
 | G4 | agent traces where `cv2.dnn` output changes a decision | **MET** | 7-scenario demo, every expectation asserted at run time: live night re-analysis (s2) plus escalation / approval / ranger-check routing; kill-switch B **not triggered** (195/200 agree with the rules-only baseline); `agent/G4-REPORT.md` |
-| G5 | dashboard + final eval + latency/cost | **MET** | read-only ops endpoint, blur always; FP/camera/day mean **1.95** over 347 active cells; new engine **$3.67/1M** vs legacy $4.16/1M (+13%); Wellington person P/R honestly NOT_COMPUTABLE; `eval/S5-REPORT.md` |
+| G5 | dashboard + final eval + latency/cost | **MET** | read-only ops endpoint, blur always; FP/camera/day mean **1.95** over 347 active cells; new engine **$3.67/1M** vs legacy $4.16/1M (+13%); person P/R measured on person-labelled held-outs — Seattle(ish) image-level **P 0.96 / R 0.88** @ deploy conf (single-identity bound), COCO box-level P 0.55 / R 0.38, vehicle honestly 0/60 in-domain; `eval/S5-REPORT.md`, `eval/PERSON-PR-REPORT.md` |
 | G6 | packaging | **MET-PENDING-SUBMISSION** | everything in-repo and ready (this document is the last piece); the Devpost submission itself is human-gated, due **24-Oct-2026** |
 
 Everything below is measured offline on this workstation (CPU-only) or
@@ -336,18 +336,35 @@ Clock honesty: the day partition rides the ETL's **synthetic**
 per-camera clock (deterministic, seed-pinned) — the FP counts are
 measured, the per-day aggregation is over a simulated calendar.
 
-### Person events — load substitute and the honest gap
+### Person events — measured P/R on person-labelled held-outs
 
-Substitute actually computable on the available held-out: **48 person
-detections over 29 images / 18 cameras** (conf p50 0.5623, max 0.9285)
-— detection counts, **not** error rates. All 7 corpus person events are
-queued by the agent (the baseline escalates 5 of them blind — §9).
+Person precision/recall is now **measured** on two public held-outs
+with person ground truth (`eval/PERSON-PR-REPORT.md`); the earlier
+"load, not errors" substitute is retired. Corpus load for context:
+**48 person detections over 29 images / 18 cameras** (conf p50
+0.5623, max 0.9285); all 7 corpus person events are queued by the
+agent (the baseline escalates 5 of them blind — §9).
 
-**Wellington person P/R: NOT_COMPUTABLE.** The dataset is absent and
-no local GT vocabulary carries a `person` class (Caltech 22 and
-Missouri 21 categories: no person; the eval sample's GT is
-`animal`-only). Probe evidence is committed in `eval/S5-REPORT.md` §4;
-any number here would be fabricated.
+- **In-domain (Seattle(ish) Camera Traps, 1,740 stills, image level,
+  deploy conf 0.25): person P 0.9591 / R 0.8788** — 29 of 30 FPs fire
+  on empty frames; the operating point sits on the F1 plateau. Bound:
+  single identity (the dataset's author; images with other people are
+  removed by design), one yard.
+- **Out-of-domain ceiling (COCO val2017, 5,000 images, box level,
+  IoU ≥ 0.5): person P 0.5479 / R 0.3829** — 83% of the FPs are
+  localization errors on person-GT images, not class confusion.
+- **Vehicle, both tiers: measured unreliable** — 0 of 60 vehicle-GT
+  stills detected at any threshold from the 0.10 floor up (in-domain
+  precision 0 / recall 0); COCO vehicle P 0.14 / R 0.15. Vehicle
+  alerting is not supported by this detector in this deployment.
+
+**Wellington person P/R: uncomputable by vocabulary.** The public
+labels enumerate 17 categories (15 animals + `empty` +
+`unclassifiable`) — no person class, image-level only — so the gap was
+never download bandwidth. Person-labelled camera-trap GT is
+structurally scarce (SWG's public box file: 781 person-annotated
+images, all 781 under `private/`), hence the two-tier held-out design
+above; the enumeration is committed in `eval/PERSON-PR-REPORT.md`.
 
 ### Failure catalog — 7 cases, each with an annotated image, measured numbers, and reproducible keys (`eval/failures/`)
 
@@ -594,6 +611,9 @@ artifacts, never real intruders, and every one is still human-reviewed
 Everything above ran offline and local: CPU-only inference, LocalStack
 for the AWS lane (no cloud credentials anywhere in the repo), datasets
 and models on local disk. The AWS lane is validated on LocalStack
-only; Graviton is NOT MEASURED; Wellington person P/R is NOT_COMPUTABLE
-— the gaps are stated where they occur, with the evidence that bounds
-them. Publication and the Devpost submission are gated on the human.
+only; Graviton is NOT MEASURED; person P/R is measured on
+person-labelled held-outs while Wellington itself stays uncomputable
+(its public labels carry no person class — enumerated in
+`eval/PERSON-PR-REPORT.md`) — the gaps are stated where they occur,
+with the evidence that bounds them. Publication and the Devpost
+submission are gated on the human.

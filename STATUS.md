@@ -345,12 +345,16 @@ protocol; TP/FP/FN cross-checked vs committed G3: exact match — 812/
 676/210): 347 active camera×day cells, 99 at zero FP; FP per active
 cell mean 1.95 / p95 6 / max 18. missouri 3.0989 vs african_wildlife
 1.5391 FP/camera/day (day partition rides the synthetic ETL clock —
-counts measured, partition simulated). **Wellington person P/R:
-NOT_COMPUTABLE** — the dataset is absent and no local GT vocabulary
-carries a `person` class (probe evidence in the report); substitute on
-the available held-out: 48 person detections over 29 images / 18
-cameras (load, not errors), all 7 corpus person events queued by the
-agent.
+counts measured, partition simulated). **Person P/R now measured**
+(0917, `eval/PERSON-PR-REPORT.md`) on person-labelled held-outs:
+Seattle(ish) image-level **P 0.9591 / R 0.8788** @ deploy conf 0.25
+(single-identity bound; 29 of 30 FPs on empty frames), COCO box-level
+P 0.5479 / R 0.3829 (83% localization FPs), vehicle honestly 0/60
+in-domain at every threshold — the "load, not errors" caveat is
+retired; Wellington itself stays uncomputable (public labels carry no
+person class — enumerated in the report). Corpus load for context: 48
+person detections over 29 images / 18 cameras, all 7 corpus person
+events queued by the agent.
 
 ### Latency/cost
 
@@ -380,8 +384,10 @@ instead of a fabricated number.
 
 Endpoint deployed (local, read-only, blur always) + latency table (new
 vs legacy, CPU; Graviton honest NOT MEASURED with procedure) + cost per
-1M with assumptions + Wellington P/R reported as an honest
-NOT_COMPUTABLE with the person-load substitute. Item-by-item checklist:
+1M with assumptions + person P/R measured on person-labelled held-outs
+(0917, `eval/PERSON-PR-REPORT.md`: in-domain P 0.9591 / R 0.8788 @
+deploy conf, COCO box P 0.5479 / R 0.3829; Wellington itself
+uncomputable by vocabulary). Item-by-item checklist:
 `eval/S5-REPORT.md` §6.
 
 ## S6 packaging — Gate G6, met-pending-submission (2026-09-16)
@@ -460,7 +466,10 @@ form, SUBMIT by 24-Oct.
   once AWS access resumes — replaces the at-parity arithmetic in
   `processed/s5_latency.md`.
 - Ingest a person-labelled held-out (Wellington or equivalent) to make
-  person P/R computable — today's person numbers are load, not errors.
+  person P/R computable — **DONE 0917** (`eval/PERSON-PR-REPORT.md`):
+  measured on Seattle(ish) + COCO; vehicle measured unreliable (0/60);
+  Wellington itself documented uncomputable (no person class in public
+  labels).
 - Agent: exercise the Bedrock adapter lane once AWS credentials resume
   (offline stub documented in `agent/adapters.py`) — it must beat
   `rules-v1` on the committed corpus comparison before its cost is
