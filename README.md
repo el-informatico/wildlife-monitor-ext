@@ -29,6 +29,14 @@ License: Apache-2.0 (see `LICENSE`).
   the latency/cost table (new cv2.dnn engine vs legacy PyTorch, $/1M
   with stated assumptions). See `dashboard/README.md` and
   `eval/S5-REPORT.md`.
+- `requirements/` — S6 pinned environments: the pipeline-venv freeze
+  (plus the OpenCV 5 source-build pin), the legacy baseline-venv
+  freeze, and the 3-environment rebuild table. See
+  `requirements/README.md`.
+- `docs/` — S6 packaging: `TECH-REPORT.md` (the 9-piece submission
+  package), `ARCHITECTURE.md` (canonical mermaid diagrams — system,
+  AWS lane, agentic flow), `VIDEO-SCRIPT.md` (≤5:00 storyboard), and
+  `SUBMISSION-CHECKLIST.md` (every Devpost artifact with its owner).
 - `src/opencv/` — OpenCV 5 source tree used for the local build (untracked;
   fetch upstream).
 - `data/`, `downloads/`, `models/`, `processed/`, `manifests/`, `build/`,

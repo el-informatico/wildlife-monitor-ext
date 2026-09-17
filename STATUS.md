@@ -384,8 +384,77 @@ vs legacy, CPU; Graviton honest NOT MEASURED with procedure) + cost per
 NOT_COMPUTABLE with the person-load substitute. Item-by-item checklist:
 `eval/S5-REPORT.md` §6.
 
+## S6 packaging — Gate G6, met-pending-submission (2026-09-16)
+
+Sprint 6: final packaging so submission day is pure upload (submit
+≤24-Oct-2026 per the ≥48h-margin gate). Everything local — no push, no
+Devpost submission; both are human-gated with owners and dates in
+`docs/SUBMISSION-CHECKLIST.md`.
+
+### What landed
+
+- `docs/TECH-REPORT.md` — the submission package's 9 pieces, each with
+  its evidence: G1–G6 gate table, two-repo layout, pinned-environments
+  + command matrices, the endpoint, the full evaluation tables (7
+  failure cases), latency/cost, and the agentic extras (s2 pass-1 →
+  `night_reanalysis` → live pass-2 → archive; corpus comparison
+  195/200; observability + human control). Self-contained for judges —
+  embeds the mermaid diagrams alongside the canonical copies.
+- `docs/ARCHITECTURE.md` — canonical mermaid diagrams: the system loop
+  (ETL → MOG2/CLAHE gate → cv2.dnn MDv6 → crops → classifier v0 →
+  contract records → agent + dashboard), the AWS/LocalStack lane (S3 →
+  ingest Lambda → DynamoDB + DLQ, motion-gate Lambda on the OpenCV 5
+  runtime image), and the agentic flow (4-tool consult → decision
+  table → one action, with the `night_reanalysis` re-entry loop).
+  Plus where-OpenCV-5-is-substantive and real-vs-simulated tables.
+- `docs/VIDEO-SCRIPT.md` — ≤5:00 storyboard (696 words ≈ 4:45): 9
+  segments, 10 clips with verbatim commands, 6 must-land moments, the
+  honesty words marked edit-protected. Recording + upload human-gated
+  (by 20-Oct per the checklist).
+- `docs/SUBMISSION-CHECKLIST.md` — every Devpost artifact with an
+  owner; deadline math (submit 24-Oct, hard deadline 26-Oct); the
+  publication gates; the submission-day runbook.
+- `requirements/` — pinned environments: `pipeline-venv.txt` (9-dist
+  freeze + the OpenCV 5.0.0 source-build pin), `baseline-venv.txt`
+  (141-dist legacy torch lane), `README.md` (3-environment table);
+  every package's pyproject now points at its freeze.
+
+### Pre-publication audit (2026-09-16, frozen tree)
+
+All four checks green, re-verified for the checklist: 0 host-absolute
+paths; 0 AI-tool attribution in content or commit messages (the
+`anthropic.claude-sonnet-5-0` string in `agent/adapters.py` is the
+Bedrock model id of the documented adapter stub — functional, kept); 0
+real secrets (only LocalStack dummy `test` credentials, documented); 0
+sibling-project tokens. Conditional finding, owner-decided: 13 tracked
+files reference the sprints-1-2 repo clone-relative
+(`../wildlife-monitor`) and `pipeline/e2e.py` imports it at runtime —
+default resolution is to publish BOTH repos side by side (one
+submission); tokenizing is needed only if the human publishes this
+repo alone.
+
+### Verification
+
+- Offline tests re-run on the packaged tree: **189 + 90 = 279 passed**
+  (23 pipeline + 49 eval + 79 agent + 38 dashboard; 90 infra on moto).
+- Mermaid statically validated (subgraph/quote balance); diagrams live
+  in `docs/ARCHITECTURE.md` (canonical) and `docs/TECH-REPORT.md`.
+- No push: local commits only, hooks green on every one.
+
+### Gate G6: met-pending-submission
+
+Every in-repo piece of the package is done and committed (checklist
+§2: pieces 1, 3, 4, 7, 8, 9 READY; 5 READY-local; 6
+READY-BUT-HUMAN-GATED). What remains is human-only and dated in
+`docs/SUBMISSION-CHECKLIST.md` §1/§3: the publish decision + repo
+publication, video recording (by 20-Oct) + unlisted upload, the Devpost
+form, SUBMIT by 24-Oct.
+
 ## Next
 
+- Submission window (human-gated, dated): `docs/SUBMISSION-CHECKLIST.md`
+  — publish both repos, record + upload the video by 20-Oct, Devpost
+  form 23-Oct, submit by 24-Oct (G6 margin).
 - Graviton latency for real: run the documented `--fresh` bench on a
   c7g.large (arm64 wheels, same first-100 images, warmup 3 excluded)
   once AWS access resumes — replaces the at-parity arithmetic in
