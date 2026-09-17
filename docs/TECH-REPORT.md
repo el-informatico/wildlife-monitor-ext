@@ -470,6 +470,28 @@ flowchart TD
     ACTION -.-> TR
 ```
 
+**Why this qualifies as agentic — the lane's own bar.** The Agentic
+Vision track defines qualification in one sentence: "To qualify, image
+or video results must influence a subsequent plan, tool call, action,
+or request for human approval. A chatbot that only explains a fixed
+vision result is not enough—the visual evidence must change what the
+system does next." (Agentic Vision rules, opencv26.devpost.com.)
+Scenario s2 below is that sentence executed end-to-end: a marginal
+pass-1 detection (animal **0.3417** on a content-IR night frame)
+neither archives nor escalates — the number itself selects the next
+tool call (`night_reanalysis`), which re-asks `cv2.dnn` a different
+question (grayscale → CLAHE(3.0, (8,8)), decode floor 0.10); the
+second pass surfaces four marginal boxes the pass-1 deploy floor never
+showed; the pass-2 event re-enters the loop and the final action
+follows the pass-2 output — the visual evidence changed what the
+system did next, in the lane's own words. On the decision layer, the
+position is deliberately conservative and stated as policy: the
+winning backend today is deterministic (`rules-v1`), Bedrock spend is
+**$0**, and the adapter stays a documented stub until a model backend
+beats `rules-v1` on this same committed corpus (`agent/G4-REPORT.md`).
+The agentic claim rests on the closed perception → decision → action
+loop above and its byte-deterministic traces — not on model spend.
+
 ### Traces where `cv2.dnn` output changes a decision (Gate G4)
 
 The demo (`agent/demo/run_demo`; transcript + traces committed,
