@@ -1,0 +1,26 @@
+# Pinned environment for the perception stack — the "sprints-1-2
+# pipeline venv" every runner in this repo invokes as
+# ../wildlife-monitor/.venv/bin/python. Python 3.12.3, Linux x86_64.
+#
+# cv2 has NO pin line because it is not a pip distribution here: OpenCV
+# 5.0.0 is BUILT FROM SOURCE (git tag 5.0.0; cmake BUILD_LIST=
+# core,imgproc,imgcodecs,video,dnn,python3; bundled jpeg/png/zlib/tiff/
+# webp/protobuf; everything optional disabled) straight into the venv's
+# site-packages by the sprints-1-2 repo's scripts/build-opencv5.sh.
+# Verified at freeze time: cv2.__version__ == "5.0.0".
+#
+# wildlife-monitor==0.1.0 is the sprints-1-2 repo's own package,
+# installed EDITABLE from ../wildlife-monitor (not on any index); the
+# line records the version in use, the source is that repo.
+#
+# Verbatim freeze (importlib.metadata over all installed distributions,
+# 2026-09-16):
+Pygments==2.21.0
+iniconfig==2.3.0
+numpy==2.5.3
+packaging==26.3
+pillow==12.3.0
+pluggy==1.6.0
+pyarrow==25.0.1
+pytest==9.1.1
+wildlife-monitor==0.1.0

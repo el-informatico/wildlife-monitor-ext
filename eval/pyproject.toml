@@ -3,8 +3,10 @@ name = "wfm-eval"
 version = "0.1.0"
 description = "G3 perception evaluation: held-out classifier metrics, detection metrics with a day/night split, sequence-trigger logic"
 requires-python = ">=3.12"
-# No pinned dependencies: the harness runs in the sprints-1-2 pipeline venv
-# (OpenCV 5 from source, numpy, pyarrow, the wildlife_monitor package).
+# No direct dependencies of its own: the harness runs in the sprints-1-2
+# pipeline venv (OpenCV 5 from source, numpy, pyarrow, the
+# wildlife_monitor package). Pinned freeze: requirements/pipeline-venv.txt
+# (legacy latency lane: requirements/baseline-venv.txt).
 # See pipeline/README.md. The offline tests additionally need pytest.
 
 [dependency-groups]

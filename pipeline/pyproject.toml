@@ -3,8 +3,9 @@ name = "wfm-pipeline"
 version = "0.1.0"
 description = "E2E union stage: MDv6 detections -> crops -> classifier v0 species -> schema-valid records"
 requires-python = ">=3.12"
-# No pinned dependencies: the stage runs in the sprints-1-2 pipeline venv
-# (OpenCV 5 from source, numpy, pyarrow, the wildlife_monitor package).
+# No direct dependencies of its own: the stage runs in the sprints-1-2
+# pipeline venv (OpenCV 5 from source, numpy, pyarrow, the
+# wildlife_monitor package). Pinned freeze: requirements/pipeline-venv.txt.
 # See README.md. The offline tests additionally need pytest.
 
 [dependency-groups]
