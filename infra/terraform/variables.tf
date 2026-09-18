@@ -85,3 +85,11 @@ variable "motion_lambda_memory" {
   type        = number
   default     = 1024
 }
+
+# --- real-AWS packaging (see DEPLOY-AWS.md) -----------------------------------
+
+variable "motion_image_uri" {
+  description = "ECR image URI for the motion Lambda on real AWS (container package; source-built OpenCV 5 baked in). Empty = zip packaging, which relies on LocalStack's runtime image mapping."
+  type        = string
+  default     = ""
+}

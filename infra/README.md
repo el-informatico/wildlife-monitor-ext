@@ -134,6 +134,13 @@ Measured end-to-end over the African Wildlife dataset (1,504 images, 24
 cameras): commands, raw outputs and the verdict live in
 **[G1-AWS-REPORT.md](G1-AWS-REPORT.md)**.
 
+Deploying the same root module to **real AWS** (separate tfvars/workspace,
+motion Lambda as an ECR container image): runbook, local-validation
+evidence, IAM policy to attach and cost estimates in
+**[DEPLOY-AWS.md](DEPLOY-AWS.md)** — deploy-ready; the only missing input
+is a permitted identity (the local `hackathon-deploy` user has valid keys
+but zero service grants).
+
 ## Why Terraform (and not SAM/CDK)
 
 The repo is Python + uv, but that argues for boto3 in the *handler and tests*,
@@ -166,9 +173,12 @@ infra/
 │   ├── localstack_smoke.py   # up → apply → upload → assert → DLQ → teardown
 │   ├── export_manifest_json.py  # ETL parquet → JSON (pipeline venv; pyarrow)
 │   ├── g1_plan.py            # pure planning: manifest rows → jobs/addresses
-│   └── g1_batch_load.py      # G1 driver: media+jobs upload → wait → verify
+│   ├── g1_batch_load.py      # G1 driver: media+jobs upload → wait → verify
+│   └── push_lambda_image.py  # motion image → ECR (real AWS; boto3, no aws CLI)
 ├── VALIDATION.md             # measured results of every mandated check
 ├── G1-AWS-REPORT.md          # Gate G1 AWS half: the 1,504-image load, measured
+├── DEPLOY-AWS.md             # real-AWS runbook (T-WL-1): creds finding, IAM,
+│                             #   deploy/G1/evidence steps, cost, teardown
 └── pyproject.toml            # uv project: dev deps boto3/moto/pytest only
 ```
 

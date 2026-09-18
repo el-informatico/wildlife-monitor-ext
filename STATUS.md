@@ -456,11 +456,61 @@ READY-BUT-HUMAN-GATED). What remains is human-only and dated in
 publication, video recording (by 20-Oct) + unlisted upload, the Devpost
 form, SUBMIT by 24-Oct.
 
+## T-WL-1 — real-AWS deploy lane: deploy-ready, NOT deployed (2026-09-17)
+
+Judge-audit follow-up (Cloud 6.5/10 → the "run on real AWS" half). The
+machine's only AWS identity (`hackathon-deploy`) has valid keys but zero
+service permissions — only STS answers — so the honest deliverable is a
+deploy-ready state + evidence package, not a claimed cloud run.
+
+### What landed
+
+- `infra/terraform/aws.tfvars` + workspace `aws`: the same root module
+  targets real regional endpoints (`aws_endpoint = ""`), account-qualified
+  names (bucket `wfm-raw-media-201023850731`, table `wfm-detections-aws`).
+- Motion Lambda on real AWS ships as an ECR container image (source-built
+  OpenCV 5 cannot fit a 250 MB layer): `motion_image_uri` switches
+  `lambda.tf` between the LocalStack zip variant and the Image variant
+  (paired invoke configs, account-scoped log policy via
+  `data.aws_caller_identity`); `docker/Dockerfile.lambda-py312-opencv5-aws`
+  bakes `_HANDLER` + RIC entrypoint; `scripts/push_lambda_image.py`
+  (boto3; no aws CLI on this machine) creates the repo and pushes.
+- `infra/terraform/iam-deploy-policy.json` — least-privilege policy for
+  exactly this stack (attach command in the runbook; PassRole scoped to
+  lambda.amazonaws.com; includes teardown's delete actions).
+- `infra/DEPLOY-AWS.md` — the runbook: credentials finding verbatim,
+  what was validated locally, ordered deploy → G1 pass → evidence-capture
+  steps, cost ESTIMATES, teardown. Pointers from `infra/README.md`;
+  honest addendum in `docs/TECH-REPORT.md` §Reproduction.
+
+### Verification (all offline — no service permissions exist to exceed this)
+
+- Docker image builds from no-cache and boots the real entrypoint path:
+  python 3.12.3, cv2 5.0.0, `motion_app` handler import, MOG2 construct —
+  `infra/evidence/aws/image-bootcheck.txt`.
+- Real-AWS dry run: `terraform plan -refresh=false -var-file=aws.tfvars`
+  in workspace `aws` — signs with the real credentials, live STS read
+  (`id=201023850731`), **Plan: 14 to add** — `infra/evidence/aws/plan-aws.log`.
+- No regression: `terraform fmt -check` + `validate` green (pre-existing
+  deprecation warnings only); LocalStack default-workspace plan **0
+  drift**; moto suite **90 passed**.
+
+### Explicitly NOT done (needs a permitted identity)
+
+ECR push · `terraform apply` · the real-AWS G1 pass · measured costs
+(§7 numbers are public-pricing estimates). Graviton stays NOT MEASURED
+for the same reason.
+
 ## Next
 
 - Submission window (human-gated, dated): `docs/SUBMISSION-CHECKLIST.md`
   — publish both repos, record + upload the video by 20-Oct, Devpost
   form 23-Oct, submit by 24-Oct (G6 margin).
+- Real-AWS run (owner: Juan, one permission grant away): attach
+  `infra/terraform/iam-deploy-policy.json` to `hackathon-deploy`
+  (`infra/DEPLOY-AWS.md` §3), then follow §4–§6 — deploy, G1 pass,
+  evidence capture; every step is pre-validated offline except the ones
+  the identity was denied.
 - Graviton latency for real: run the documented `--fresh` bench on a
   c7g.large (arm64 wheels, same first-100 images, warmup 3 excluded)
   once AWS access resumes — replaces the at-parity arithmetic in

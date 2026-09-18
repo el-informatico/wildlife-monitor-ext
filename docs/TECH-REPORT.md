@@ -617,3 +617,19 @@ person-labelled held-outs while Wellington itself stays uncomputable
 `eval/PERSON-PR-REPORT.md`) — the gaps are stated where they occur,
 with the evidence that bounds them. Publication and the Devpost
 submission are gated on the human.
+
+**Real-AWS lane (2026-09-17 addendum): deploy-ready, not deployed.** A
+real-AWS deployment path now exists and is validated as far as an
+unpermitted identity allows: the same terraform root targets real
+regional endpoints (`terraform/aws.tfvars`, separate `aws` workspace),
+the motion Lambda ships as an ECR container image that boots the real
+Runtime Interface Client path with OpenCV 5.0.0
+(`infra/evidence/aws/image-bootcheck.txt`), and a signed dry run —
+`terraform plan -refresh=false` against real STS — computes the full
+14-resource graph (`infra/evidence/aws/plan-aws.log`). What blocked the
+actual deploy: this machine's only AWS identity
+(`hackathon-deploy`) has valid keys but zero service permissions — the
+finding, the least-privilege IAM policy to attach, the ordered
+deploy/G1/evidence steps and cost estimates are the runbook
+`infra/DEPLOY-AWS.md`. Costs there are estimates, not measurements;
+Graviton stays NOT MEASURED for the same reason.

@@ -1,0 +1,12 @@
+# wfm-lambda-py312-opencv5:g1-aws boot check (2026-09-17T21:42:35Z)
+# exercises bootstrap.py path setup exactly as the real AWS entrypoint does
+$ docker run --rm --entrypoint /var/lang/bin/python3.12 -e LAMBDA_RUNTIME_DIR=/var/runtime wfm-lambda-py312-opencv5:g1-aws -c "…bootstrap.set_default_sys_path(); add_default_site_directories(); set_default_pythonpath(); import cv2, motion_app…"
+python 3.12.3 | cv2 5.0.0
+TASK_ROOT /var/task | _HANDLER motion_app.lambda_handler | PYTHONPATH /var/runtime
+handler: lambda_handler | awslambdaric import OK
+MOG2 construct OK (motion gate dependency)
+
+image: [wfm-lambda-py312-opencv5:g1-aws] size=279393817 bytes
+
+# re-verified 2026-09-17 20:37 local: docker build --no-cache → sha256:d9cabd768476…
+# same boot check: python 3.12.3 | cv2 5.0.0 | handler lambda_handler | MOG2 OK — PASS

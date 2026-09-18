@@ -1,0 +1,35 @@
+# Real-AWS variant of the motion-gate execution image.
+#
+# The base image (Dockerfile.lambda-py312-opencv5, built by
+# scripts/build-lambda-image.sh) carries the source-built OpenCV 5 runtime in
+# the official Lambda layout, but is LocalStack-shaped: LocalStack copies
+# /var/rapid/init into the container itself, so the base needs no entrypoint
+# and no handler. A real AWS container Lambda must instead start the Runtime
+# Interface Client itself and know the handler — that is ALL this variant
+# adds on top:
+#
+#   - the handler file at /var/task (LAMBDA_TASK_ROOT)
+#   - ENV _HANDLER (package_type=Image functions do not get the function
+#     config's handler string injected; baking it is the standard pattern)
+#   - ENTRYPOINT straight into bootstrap.py (the RIC entry, mirroring the
+#     official python3.12 base image)
+#
+# Build AFTER scripts/build-lambda-image.sh has produced the base tag, from
+# the repo infra/ directory (context = infra/, not the lambda-image dir):
+#
+#   docker build -f docker/Dockerfile.lambda-py312-opencv5-aws \
+#     -t wfm-lambda-py312-opencv5:g1-aws .
+#
+# scripts/push_lambda_image.py runs this build and pushes to ECR.
+
+FROM wfm-lambda-py312-opencv5:g1
+
+ENV LAMBDA_TASK_ROOT=/var/task
+ENV _HANDLER=motion_app.lambda_handler
+WORKDIR /var/task
+
+COPY handler/motion_app.py /var/task/motion_app.py
+
+# Mirror the official base image's entrypoint: bootstrap.py execs the
+# awslambdaric main loop with [LAMBDA_TASK_ROOT, _HANDLER].
+ENTRYPOINT ["/var/lang/bin/python3.12", "/var/runtime/bootstrap.py"]

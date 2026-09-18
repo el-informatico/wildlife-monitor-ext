@@ -61,9 +61,9 @@ resource "aws_iam_role_policy" "ingest" {
         Sid    = "TailLogs"
         Effect = "Allow"
         Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
-        # LocalStack is permissive about the account fragment; real AWS wants
-        # the 12-digit account id here — one thing to revisit on first deploy.
-        Resource = ["arn:aws:logs:*:*:*"]
+        # LocalStack is permissive about the account fragment; on real AWS
+        # this resolves to the deploying account via aws_caller_identity.
+        Resource = ["arn:aws:logs:*:${local.account_id}:*"]
       },
     ]
   })
@@ -127,6 +127,8 @@ data "archive_file" "motion_lambda" {
 }
 
 resource "aws_lambda_function" "motion" {
+  count = local.motion_use_image ? 0 : 1
+
   function_name    = local.motion_function_name
   role             = aws_iam_role.ingest.arn
   filename         = data.archive_file.motion_lambda.output_path
@@ -152,10 +154,60 @@ resource "aws_lambda_function" "motion" {
   depends_on = [aws_iam_role_policy.ingest]
 }
 
+# Real-AWS variant: same handler + role + env, packaged as an ECR container
+# image (Dockerfile.lambda-py312-opencv5-aws bakes motion_app.py and the
+# OpenCV 5 runtime — see DEPLOY-AWS.md). package_type = Image means no zip,
+# no runtime, and the handler lives in the image, not in the function config.
+resource "aws_lambda_function" "motion_image" {
+  count = local.motion_use_image ? 1 : 0
+
+  function_name = local.motion_function_name
+  role          = aws_iam_role.ingest.arn
+
+  package_type  = "Image"
+  image_uri     = var.motion_image_uri
+  architectures = ["x86_64"] # the vendored source-built OpenCV 5 is x86_64
+
+  timeout     = var.motion_lambda_timeout
+  memory_size = var.motion_lambda_memory
+
+  environment {
+    variables = merge(
+      {
+        DYNAMO_TABLE       = var.table_name
+        MOTION_JOBS_PREFIX = var.motion_jobs_prefix
+        MAX_JOB_FRAMES     = tostring(var.max_motion_job_frames)
+        LOG_LEVEL          = local.log_level
+      },
+      var.lambda_aws_endpoint == "" ? {} : { AWS_ENDPOINT_URL = var.lambda_aws_endpoint }
+    )
+  }
+
+  depends_on = [aws_iam_role_policy.ingest]
+}
+
 # Same poison policy as the ingest function: a malformed motion job fails
 # the invocation and lands on the shared DLQ instead of retrying hot.
+# (Two instances of the invoke config because its function_name must be a
+# literal reference, not a local — the mapping follows the same count trick.)
 resource "aws_lambda_function_event_invoke_config" "motion" {
-  function_name                = aws_lambda_function.motion.function_name
+  count = local.motion_use_image ? 0 : 1
+
+  function_name                = aws_lambda_function.motion[0].function_name
+  maximum_retry_attempts       = 0
+  maximum_event_age_in_seconds = 360
+
+  destination_config {
+    on_failure {
+      destination = aws_sqs_queue.ingest_dlq.arn
+    }
+  }
+}
+
+resource "aws_lambda_function_event_invoke_config" "motion_image" {
+  count = local.motion_use_image ? 1 : 0
+
+  function_name                = aws_lambda_function.motion_image[0].function_name
   maximum_retry_attempts       = 0
   maximum_event_age_in_seconds = 360
 

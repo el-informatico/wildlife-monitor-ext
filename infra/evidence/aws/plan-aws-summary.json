@@ -1,0 +1,24 @@
+{
+  "planned_at": "2026-09-17",
+  "workspace": "aws",
+  "mode": "dry-run (terraform plan -refresh=false, no service calls; only data.aws_caller_identity via STS)",
+  "identity_account": "201023850731",
+  "changes": null,
+  "summary": 14,
+  "resources": [
+    "aws_dynamodb_table.detections",
+    "aws_iam_role.ingest",
+    "aws_iam_role_policy.ingest",
+    "aws_lambda_function.ingest",
+    "aws_lambda_function.motion_image[0]",
+    "aws_lambda_function_event_invoke_config.ingest",
+    "aws_lambda_function_event_invoke_config.motion_image[0]",
+    "aws_lambda_permission.ingest",
+    "aws_lambda_permission.motion",
+    "aws_s3_bucket.ingest",
+    "aws_s3_bucket_notification.ingest",
+    "aws_s3_bucket_versioning.ingest",
+    "aws_sqs_queue.ingest_dlq",
+    "aws_sqs_queue_policy.ingest_dlq"
+  ]
+}
