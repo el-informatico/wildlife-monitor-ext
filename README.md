@@ -25,10 +25,15 @@ License: Apache-2.0 (see `LICENSE`).
 - `dashboard/` — S5 read-only ops endpoint (Gate G5): camera map,
   species counts, approval queue, failure gallery, and face blur always
   enforced on the single image-serving path. Plus the S5 final eval
-  (FP/camera/day, Wellington person P/R honestly NOT_COMPUTABLE) and
-  the latency/cost table (new cv2.dnn engine vs legacy PyTorch, $/1M
-  with stated assumptions). See `dashboard/README.md` and
-  `eval/S5-REPORT.md`.
+  (FP/camera/day) and the latency/cost table (new cv2.dnn engine vs
+  legacy PyTorch, $/1M with stated assumptions). See
+  `dashboard/README.md` and `eval/S5-REPORT.md`.
+- Person P/R (measured, dataset-dependent): in-domain camera-trap GT
+  (Seattle) **P 0.959 / R 0.879** at the deployed 0.25 confidence;
+  COCO val2017 as out-of-domain proxy **P 0.548 / R 0.383** (greedy
+  IoU ≥ 0.5); Wellington itself is honestly NOT_COMPUTABLE — its
+  public labels carry no person class (vocabulary gap, not bandwidth).
+  Evidence + caveats: `eval/PERSON-PR-REPORT.md`.
 - `requirements/` — S6 pinned environments: the pipeline-venv freeze
   (plus the OpenCV 5 source-build pin), the legacy baseline-venv
   freeze, and the 3-environment rebuild table. See
