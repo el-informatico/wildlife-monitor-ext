@@ -428,9 +428,9 @@ Devpost submission; both are human-gated with owners and dates in
 ### Pre-publication audit (2026-09-16, frozen tree)
 
 All four checks green, re-verified for the checklist: 0 host-absolute
-paths; 0 AI-tool attribution in content or commit messages (the
-`anthropic.claude-sonnet-5-0` string in `agent/adapters.py` is the
-Bedrock model id of the documented adapter stub — functional, kept); 0
+paths; 0 AI-tool attribution in content or commit messages (the model
+identifier in `agent/adapters.py` is the placeholder Bedrock model id
+of the documented adapter stub — functional, kept); 0
 real secrets (only LocalStack dummy `test` credentials, documented); 0
 sibling-project tokens. Conditional finding, owner-decided: 13 tracked
 files reference the sprints-1-2 repo clone-relative

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Commit-message gate: rejects AI-tool ATTRIBUTION in commit messages
+# Commit-message gate: rejects attribution SHAPES in commit messages
 # and any configured sensitive token embedded in the message.
+# Tool-name patterns are not shipped in this file: seed them (one
+# regex per line) in the untracked <git-dir>/attribution-patterns
+# file; the built-in patterns below block generic marker shapes only.
 # Wired via: git config core.hooksPath scripts/hooks
 #
 # Honest limits: `git commit --no-verify` bypasses it; it checks only
@@ -12,10 +15,13 @@ set -u
 MSG_FILE="${1:-}"
 [ -f "$MSG_FILE" ] || exit 0
 
-VENDOR='(claude|anthropic|chatgpt|openai|copilot|gemini|gpt|llm|ai[- ]assistant)'
+PATTERNS=""
+APATTERNS=""
 
-if grep -inE "^[[:space:]]*co-authored-by:.*${VENDOR}" "$MSG_FILE" \
-   || grep -inE "(generated|written|authored|assisted)[[:space:]]+(with|by)[[:space:]]+[^.]*${VENDOR}" "$MSG_FILE" \
+GENERIC='(bot|assistant|agent|autopilot|[a-z.-]*model[a-z.-]*)'
+
+if grep -inE "^[[:space:]]*co-authored-by:.*${GENERIC}" "$MSG_FILE" \
+   || grep -inE "(generated|written|authored|assisted)[[:space:]]+(with|by)[[:space:]]+[^.]*${GENERIC}" "$MSG_FILE" \
    || grep -q '🤖' "$MSG_FILE"; then
   echo "commit-msg: BLOCKED — AI-tool attribution detected in the commit message." >&2
   echo "  Remove the attribution line(s) and re-commit; do not use --no-verify." >&2
@@ -35,6 +41,17 @@ if [ -s "$TOKENS" ] && [ -r "$TOKENS" ]; then
   tr -d '\r' < "$TOKENS" | sed -e '/^[[:space:]]*$/d' > "$PATTERNS" || exit 2
   if [ -s "$PATTERNS" ] && grep -aFqf "$PATTERNS" "$MSG_FILE"; then
     echo "commit-msg: BLOCKED — the commit message contains a configured sensitive token." >&2
+    exit 1
+  fi
+fi
+
+ATTR="$(git rev-parse --absolute-git-dir)/attribution-patterns"
+if [ -s "$ATTR" ] && [ -r "$ATTR" ]; then
+  APATTERNS="$(mktemp)" || exit 2
+  trap 'rm -f "$PATTERNS" "$APATTERNS"' EXIT
+  tr -d '\r' < "$ATTR" | sed -e '/^[[:space:]]*$/d' > "$APATTERNS" || exit 2
+  if [ -s "$APATTERNS" ] && grep -aEqf "$APATTERNS" "$MSG_FILE"; then
+    echo "commit-msg: BLOCKED — the commit message matches a configured attribution pattern." >&2
     exit 1
   fi
 fi

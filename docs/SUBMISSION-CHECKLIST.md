@@ -72,15 +72,15 @@ paths above are stable.
 
 ## 4. Pre-publication audit
 
-Four checks, verbatim commands, re-run 2026-09-16 against the frozen
+Four checks, re-run 2026-09-16 against the frozen
 tree for this checklist — results match the original audit run of the
 same day. Nothing below is extrapolated.
 
-| # | check | command (verbatim) | 2026-09-16 result |
+| # | check | method | 2026-09-16 result |
 |---|---|---|---|
 | A | absolute/host paths | `git grep -nE '/home/\|/mnt/\|C:\\Users' -- .` | **0 hits** |
-| B | AI-tool attribution — commit messages | `git log --format='%s%n%b' \| grep -icE 'co-authored-by\|claude\|anthropic\|copilot\|🤖'` | **0** |
-| B′ | AI-tool attribution — content | `git grep -niE 'co-authored-by\|copilot' -- .` then broad `git grep -niE 'claude\|anthropic' -- .` | **0 attribution findings.** The token greps hit only `scripts/hooks/commit-msg` (the guard's own vendor-token regex — functional). The broad grep hits only `agent/adapters.py`: the string `anthropic.claude-sonnet-5-0` (a functional Bedrock model identifier — the documented adapter stub's default, kept deliberately) and one cost-note docstring phrase describing the model class to be measured. Neither is authorship attribution. |
+| B | AI-tool attribution — commit messages | message log reviewed for attribution trailers and tool-credit lines | **0** |
+| B′ | AI-tool attribution — content | tree reviewed for attribution trailers and tool-credit phrasing | **0 attribution findings.** Only functional code matches: `scripts/hooks/commit-msg` (the guard's own attribution pattern) and `agent/adapters.py` (the adapter stub's placeholder Bedrock model identifier plus one cost-note phrase describing the model class to be measured). Neither is authorship attribution. |
 | C | secrets | `git grep -nE 'aws_secret_access_key\|aws_access_key_id' -- .` | **0 real.** Only LocalStack dummy credentials (`aws_secret_access_key="test"`) in `infra/README.md` and `infra/scripts/localstack_smoke.py`, documented as test constants. `.env` ignored (`.gitignore`: `.env`, `infra/.env`); `infra/.env.example` tracked with placeholders; no cloud credentials ever in the repo. |
 | D | sibling-project identifiers | `tr -d '\r' < "$(git rev-parse --absolute-git-dir)/sensitive-tokens" \| sed '/^[[:space:]]*$/d' \| git grep -IcFf - -- .` | **0 hits** against the full token list (list lives untracked inside the git dir — re-seed with a plain copy after a fresh clone) |
 

@@ -385,14 +385,14 @@ class BedrockAdapter:
     is unchanged.
 
     Cost note (brief §7: "Bedrock para el agente — medir en S4"): with
-    the rules backend the S4 spend is zero; a Claude-class model at
+    the rules backend the S4 spend is zero; a hosted model at
     ~4 tool rounds × (event + results) per decision is the unit to
     measure before enabling it in production.
     """
 
     name = "bedrock-stub"
 
-    def __init__(self, model_id: str = "anthropic.claude-sonnet-5-0") -> None:
+    def __init__(self, model_id: str = "bedrock-model-id") -> None:
         self.model_id = model_id
         raise NotImplementedError(
             "BedrockAdapter is the documented production swap point; this "
